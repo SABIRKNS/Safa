@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Class VI Learning Portal — Sign in</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/portal.css">
+</head>
+<body>
+<div class="wrap">
+  <div class="auth-shell">
+    <div class="brand" style="justify-content:center; margin-bottom:18px">
+      <span class="mark">📘</span>
+      <h1>Class VI Learning Portal<small>Students · Parents · Teachers</small></h1>
+    </div>
+
+    <div class="card auth-card">
+      <div class="tabs" role="tablist">
+        <button class="tab" role="tab" id="tabLogin" aria-selected="true">Sign in</button>
+        <button class="tab" role="tab" id="tabRegister" aria-selected="false">Create account</button>
+      </div>
+
+      <!-- SIGN IN -->
+      <form id="loginForm" autocomplete="on">
+        <label for="lUser">Username</label>
+        <input id="lUser" name="username" autocomplete="username" autocapitalize="none" required>
+        <label for="lPass">Password</label>
+        <input id="lPass" name="password" type="password" autocomplete="current-password" required>
+        <div class="error" id="loginErr" hidden></div>
+        <p style="margin:16px 0 0"><button class="btn" id="loginBtn" type="submit" style="width:100%">Sign in</button></p>
+        <p class="hint" style="margin-top:12px">Forgot your password? Ask your teacher to reset it.</p>
+      </form>
+
+      <!-- REGISTER -->
+      <form id="regForm" hidden autocomplete="on">
+        <label>I am a…</label>
+        <div class="roles" id="roles">
+          <button type="button" class="role" data-role="student" aria-pressed="true"><span class="e">🎒</span>Student</button>
+          <button type="button" class="role" data-role="parent" aria-pressed="false"><span class="e">👪</span>Parent</button>
+          <button type="button" class="role" data-role="teacher" aria-pressed="false"><span class="e">🍎</span>Teacher</button>
+        </div>
+
+        <label for="rName">Full name</label>
+        <input id="rName" name="name" autocomplete="name" maxlength="60" required>
+        <label for="rUser">Choose a username</label>
+        <input id="rUser" name="username" autocomplete="username" autocapitalize="none" maxlength="30" required>
+        <div class="hint">3–30 characters: letters, numbers, dot, dash or underscore. No spaces.</div>
+        <label for="rPass">Choose a password</label>
+        <input id="rPass" name="password" type="password" autocomplete="new-password" minlength="6" required>
+        <div class="hint">At least 6 characters.</div>
+
+        <div id="fStudent">
+          <label for="rSection">Section / class name <span class="muted">(optional)</span></label>
+          <input id="rSection" maxlength="20" placeholder="e.g. 6B">
+        </div>
+        <div id="fParent" hidden>
+          <label for="rParentCode">Your child's parent code</label>
+          <input id="rParentCode" maxlength="10" autocapitalize="characters" placeholder="e.g. K7M2QX">
+          <div class="hint">Your child can see this code on their dashboard after they sign up.</div>
+        </div>
+        <div id="fTeacher" hidden>
+          <label for="rTeacherCode">Teacher access code</label>
+          <input id="rTeacherCode" type="password" autocomplete="off">
+          <div class="hint">Given to you by whoever set up this site.</div>
+        </div>
+
+        <div class="error" id="regErr" hidden></div>
+        <p style="margin:16px 0 0"><button class="btn" id="regBtn" type="submit" style="width:100%">Create account</button></p>
+        <p class="hint" style="margin-top:12px">We store only a name, username, optional section and learning progress. No email, phone number or photos.</p>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script src="/js/portal.js"></script>
+<script>
+(function () {
+  // Already signed in? Go straight to your page.
+  var role0 = P.LS.get("lp_role");
+  if (P.LS.get("lp_token") && P.HOME[role0]) { location.href = P.HOME[role0]; return; }
+
+  var $ = function (id) { return document.getElementById(id); };
+  var role = "student";
+
+  function showTab(which) {
+    var login = which === "login";
+    $("loginForm").hidden = !login; $("regForm").hidden = login;
+    $("tabLogin").setAttribute("aria-selected", login); $("tabRegister").setAttribute("aria-selected", !login);
+  }
+  $("tabLogin").onclick = function () { showTab("login"); };
+  $("tabRegister").onclick = function () { showTab("register"); };
+  if (location.hash === "#register") showTab("register");
+
+  Array.prototype.forEach.call(document.querySelectorAll(".role"), function (b) {
+    b.onclick = function () {
+      role = b.getAttribute("data-role");
+      Array.prototype.forEach.call(document.querySelectorAll(".role"), function (x) { x.setAttribute("aria-pressed", x === b); });
+      $("fStudent").hidden = role !== "student";
+      $("fParent").hidden = role !== "parent";
+      $("fTeacher").hidden = role !== "teacher";
+      $("rParentCode").required = role === "parent";
+      $("rTeacherCode").required = role === "teacher";
+    };
+  });
+
+  function showErr(id, msg) { var e = $(id); e.textContent = msg; e.hidden = !msg; }
+
+  $("loginForm").onsubmit = async function (ev) {
+    ev.preventDefault(); showErr("loginErr", "");
+    $("loginBtn").disabled = true;
+    try {
+      var resp = await P.api("/login", { body: { username: $("lUser").value, password: $("lPass").value } });
+      P.saveSession(resp); location.href = P.HOME[resp.user.role];
+    } catch (e) { showErr("loginErr", e.message); }
+    $("loginBtn").disabled = false;
+  };
+
+  $("regForm").onsubmit = async function (ev) {
+    ev.preventDefault(); showErr("regErr", "");
+    $("regBtn").disabled = true;
+    var body = { role: role, name: $("rName").value, username: $("rUser").value, password: $("rPass").value };
+    if (role === "student") body.section = $("rSection").value;
+    if (role === "parent") body.parentCode = $("rParentCode").value;
+    if (role === "teacher") body.teacherCode = $("rTeacherCode").value;
+    try {
+      var resp = await P.api("/register", { body: body });
+      P.saveSession(resp); location.href = P.HOME[resp.user.role];
+    } catch (e) { showErr("regErr", e.message); }
+    $("regBtn").disabled = false;
+  };
+})();
+</script>
+</body>
+</html>

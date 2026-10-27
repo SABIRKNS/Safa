@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>My Learning — Class VI Portal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/portal.css">
+</head>
+<body>
+<div class="wrap">
+  <header class="topbar">
+    <div class="brand"><span class="mark">📘</span><h1>My Learning<small>Class VI</small></h1></div>
+    <div class="who" id="who"></div>
+  </header>
+  <main id="app"><div class="empty">Loading…</div></main>
+</div>
+
+<script src="/js/portal.js"></script>
+<script>
+(async function () {
+  var app = document.getElementById("app");
+  var me, courses, cmap, data;
+  var open = {};
+
+  try {
+    me = await P.requireRole("student");
+    var res = await Promise.all([P.api("/courses"), P.api("/progress")]);
+    courses = res[0].courses; cmap = P.courseMap(courses); data = res[1];
+  } catch (e) {
+    if (e.message !== "redirect") app.innerHTML = "<div class='error'>" + P.esc(e.message) + "</div>";
+    return;
+  }
+  open[courses[0].id] = true;
+
+  function statusOf(cid, n) {
+    var c = data.progress.chapters[cid + ":" + n];
+    return c ? c.status : "not_started";
+  }
+  function practiceOf(n) {
+    var p = data.progress.practice["maths:" + n];
+    return p ? (p.stars[0] || 0) + (p.stars[1] || 0) : 0;
+  }
+
+  function courseHTML(c) {
+    var s = data.summary.courses[c.id];
+    var pc = P.pct(s.done, s.total);
+    var rows = c.chapters.map(function (title, i) {
+      var n = i + 1, st = statusOf(c.id, n);
+      var practice = "";
+      if (c.practice) {
+        var stars = practiceOf(n);
+        practice = "<a class='btn-mini' href='/resources/maths-hub.html?chapter=" + n + "'>Practise" +
+          (stars ? " · " + stars + "/6 ★" : "") + "</a>";
+      } else practice = "<span></span>";
+      return "<li>" +
+        "<span class='ch-num'>" + n + "</span>" +
+        "<span class='ch-title'>" + P.esc(title) + "</span>" +
+        practice +
+        "<select data-course='" + c.id + "' data-ch='" + n + "' aria-label='Status for " + P.esc(c.unitLabel) + " " + n + "'>" +
+        ["not_started", "reading", "done"].map(function (v) {
+          return "<option value='" + v + "'" + (v === st ? " selected" : "") + ">" + P.STATUS_LABEL[v] + "</option>";
+        }).join("") + "</select></li>";
+    }).join("");
+    return "<details class='course' data-id='" + c.id + "'" + (open[c.id] ? " open" : "") + ">" +
+      "<summary><span class='emoji'>" + c.emoji + "</span>" +
+      "<span class='c-title'>" + P.esc(c.title) + "</span>" +
+      "<span class='c-count'>" + s.done + " / " + s.total + "</span>" +
+      "<span class='c-book'>" + P.esc(c.book) + "</span>" +
+      "<span class='c-bar bar teal'><i style='width:" + pc + "%'></i></span></summary>" +
+      "<ul class='chapters'>" + rows + "</ul>" +
+      "<a class='book-link' href='" + P.esc(c.bookUrl) + "' target='_blank' rel='noopener'>Open the free " + P.esc(c.book) + " textbook on NCERT ↗</a>" +
+      "</details>";
+  }
+
+  function render() {
+    var sm = data.summary;
+    app.innerHTML =
+      "<section class='stats'>" +
+      "<div class='stat'><div class='num'>" + sm.pct + "%</div><div class='lbl'>of all chapters finished</div></div>" +
+      "<div class='stat'><div class='num'>" + sm.done + " / " + sm.total + "</div><div class='lbl'>chapters done</div></div>" +
+      "<div class='stat'><div class='num'>" + sm.practiceStars + " / " + sm.practiceMax + " ★</div><div class='lbl'>Maths practice stars</div></div>" +
+      "<div class='stat'><div class='num' style='font-size:20px'>" + P.timeAgo(sm.lastActive) + "</div><div class='lbl'>last activity</div></div>" +
+      "</section>" +
+      "<div class='card'><div class='bar'><i style='width:" + sm.pct + "%'></i></div></div>" +
+
+      "<h2 class='section-title'>My courses</h2>" +
+      "<p class='muted' style='margin-top:-6px'>Tap a course, then set each chapter to <b>Reading</b> or <b>Done</b> as you go. Maths chapters also have a <b>Practise</b> button.</p>" +
+      courses.map(courseHTML).join("") +
+
+      "<h2 class='section-title'>Practice &amp; printables</h2>" +
+      "<div class='res-grid'>" +
+      "<a class='res' href='/resources/maths-hub.html'><span class='e'>🧭</span><b>Maths Explorer Hub</b><span>Interactive practice for all 10 maths chapters, with clues and explanations.</span></a>" +
+      "<a class='res' href='/resources/pattern-explorer.html'><span class='e'>🔎</span><b>Pattern Explorer Journal</b><span>A fun six-stop game on patterns, shapes and numbers.</span></a>" +
+      "<a class='res' href='/resources/maths-explorer-workbook.pdf' target='_blank' rel='noopener'><span class='e'>📄</span><b>Maths Workbook (PDF)</b><span>One printable page for every chapter, with answer key.</span></a>" +
+      "<a class='res' href='/resources/pattern-explorers-workbook.pdf' target='_blank' rel='noopener'><span class='e'>🖨️</span><b>Patterns Workbook (PDF)</b><span>Extra printable activities for Chapter 1.</span></a>" +
+      "</div>" +
+
+      "<h2 class='section-title'>Notes from my teacher</h2>" +
+      "<div class='card'>" + P.notesHTML(data.progress.notes) + "</div>" +
+
+      "<h2 class='section-title'>Recent activity</h2>" +
+      "<div class='card'>" + P.activityHTML(data.progress.activity, cmap) + "</div>" +
+
+      "<h2 class='section-title'>Parent code</h2>" +
+      "<div class='card'><div class='code-box'><span class='code' id='pcode'>" + P.esc(me.parentCode) + "</span>" +
+      "<button class='btn-ghost' id='copyCode'>Copy</button></div>" +
+      "<p class='muted' style='margin:10px 0 0'>Give this code to your parent. They use it when they create their account, so they can follow your progress.</p></div>";
+
+    Array.prototype.forEach.call(app.querySelectorAll("details.course"), function (d) {
+      d.addEventListener("toggle", function () { open[d.getAttribute("data-id")] = d.open; });
+    });
+    Array.prototype.forEach.call(app.querySelectorAll("select[data-ch]"), function (sel) {
+      sel.addEventListener("change", async function () {
+        sel.disabled = true;
+        try {
+          var r = await P.api("/progress/chapter", { body: {
+            course: sel.getAttribute("data-course"), chapter: Number(sel.getAttribute("data-ch")), status: sel.value } });
+          data.progress = r.progress; data.summary = r.summary;
+          render();
+          if (sel.value === "done") P.toast("Chapter finished — well done! 🎉");
+        } catch (e) { P.toast(e.message); sel.disabled = false; }
+      });
+    });
+    var cp = document.getElementById("copyCode");
+    if (cp) cp.onclick = function () {
+      if (navigator.clipboard) navigator.clipboard.writeText(me.parentCode).then(function () { P.toast("Code copied"); });
+      else P.toast("Select the code and copy it");
+    };
+  }
+  render();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Teacher view — Class VI Portal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/portal.css">
+</head>
+<body>
+<div class="wrap" style="max-width:1080px">
+  <header class="topbar">
+    <div class="brand"><span class="mark">🍎</span><h1>Teacher view<small>Class progress at a glance</small></h1></div>
+    <div class="who" id="who"></div>
+  </header>
+  <main id="app"><div class="empty">Loading…</div></main>
+</div>
+
+<dialog id="dlg" aria-labelledby="dlgTitle">
+  <div class="dlg-head">
+    <div><h2 id="dlgTitle" style="font-size:22px"></h2><div class="muted" id="dlgSub"></div></div>
+    <button class="btn-ghost" id="dlgClose" aria-label="Close">Close ✕</button>
+  </div>
+  <div class="dlg-body" id="dlgBody"></div>
+</dialog>
+
+<script src="/js/portal.js"></script>
+<script>
+(async function () {
+  var app = document.getElementById("app");
+  var courses, cmap, students = [];
+  var q = "", sectionFilter = "", sortKey = "name", sortDir = 1;
+
+  async function loadStudents() { students = (await P.api("/teacher/students")).students; }
+
+  try {
+    await P.requireRole("teacher");
+    courses = (await P.api("/courses")).courses; cmap = P.courseMap(courses);
+    await loadStudents();
+  } catch (e) { if (e.message !== "redirect") app.innerHTML = "<div class='error'>" + P.esc(e.message) + "</div>"; return; }
+
+  function visible() {
+    var list = students.filter(function (s) {
+      var hay = (s.name + " " + s.username).toLowerCase();
+      return (!q || hay.indexOf(q.toLowerCase()) >= 0) && (!sectionFilter || (s.section || "") === sectionFilter);
+    });
+    var val = {
+      name: function (s) { return s.name.toLowerCase(); },
+      section: function (s) { return (s.section || "").toLowerCase(); },
+      pct: function (s) { return s.summary.pct; },
+      stars: function (s) { return s.summary.practiceStars; },
+      last: function (s) { return s.summary.lastActive || 0; }
+    }[sortKey];
+    list.sort(function (a, b) { var x = val(a), y = val(b); return (x < y ? -1 : x > y ? 1 : 0) * sortDir; });
+    return list;
+  }
+
+  function aggregateHTML(list) {
+    if (!list.length) return "";
+    return courses.map(function (c) {
+      var done = 0, total = 0;
+      list.forEach(function (s) { done += s.summary.courses[c.id].done; total += s.summary.courses[c.id].total; });
+      var p = P.pct(done, total);
+      return "<div class='agg'><span>" + c.emoji + " " + P.esc(c.short || c.title) + "</span><div class='bar teal'><i style='width:" + p + "%'></i></div><b>" + p + "%</b></div>";
+    }).join("");
+  }
+
+  function render() {
+    var sections = Array.from(new Set(students.map(function (s) { return s.section || ""; }).filter(Boolean))).sort();
+    var list = visible();
+    var active = students.filter(function (s) { return s.summary.lastActive && Date.now() - s.summary.lastActive < 7 * 86400000; }).length;
+    var avg = students.length ? Math.round(students.reduce(function (a, s) { return a + s.summary.pct; }, 0) / students.length) : 0;
+
+    function th(key, label) {
+      var arrow = sortKey === key ? (sortDir === 1 ? " ▲" : " ▼") : "";
+      return "<th data-sort='" + key + "'>" + label + arrow + "</th>";
+    }
+
+    app.innerHTML =
+      "<section class='stats'>" +
+      "<div class='stat'><div class='num'>" + students.length + "</div><div class='lbl'>students registered</div></div>" +
+      "<div class='stat'><div class='num'>" + active + "</div><div class='lbl'>active in last 7 days</div></div>" +
+      "<div class='stat'><div class='num'>" + avg + "%</div><div class='lbl'>average chapters finished</div></div>" +
+      "</section>" +
+      (students.length ? "<div class='card'><h3 style='font-size:17px;margin-bottom:8px'>Average progress by course</h3>" + aggregateHTML(list) + "</div>" : "") +
+      "<h2 class='section-title'>Students</h2>" +
+      "<div class='toolbar'>" +
+      "<input id='search' type='search' placeholder='Search by name or username' value='" + P.esc(q) + "' aria-label='Search students'>" +
+      "<select id='secSel' aria-label='Filter by section'><option value=''>All sections</option>" +
+      sections.map(function (s) { return "<option" + (s === sectionFilter ? " selected" : "") + ">" + P.esc(s) + "</option>"; }).join("") + "</select>" +
+      "<button class='btn-ghost' id='csvBtn'>⬇ Export CSV</button></div>" +
+      (list.length
+        ? "<div class='table-wrap'><table><thead><tr>" + th("name", "Name") + th("section", "Section") + th("pct", "Chapters done") + th("stars", "Maths ★") + th("last", "Last active") +
+          "</tr></thead><tbody>" +
+          list.map(function (s) {
+            return "<tr data-u='" + P.esc(s.username) + "' tabindex='0'><td><b>" + P.esc(s.name) + "</b><br><span class='muted'>" + P.esc(s.username) + "</span></td>" +
+              "<td>" + P.esc(s.section || "–") + "</td>" +
+              "<td><span class='bar teal mini-bar'><i style='width:" + s.summary.pct + "%'></i></span>" + s.summary.done + "/" + s.summary.total + "</td>" +
+              "<td>" + s.summary.practiceStars + "/" + s.summary.practiceMax + "</td>" +
+              "<td>" + P.timeAgo(s.summary.lastActive) + "</td></tr>";
+          }).join("") + "</tbody></table></div>"
+        : "<div class='card empty'>" + (students.length ? "No students match your search." : "No students yet. Share the site link — students create their own accounts.") + "</div>");
+
+    document.getElementById("search").oninput = function (e) {
+      q = e.target.value; var pos = e.target.selectionStart; render();
+      var el = document.getElementById("search"); el.focus(); el.setSelectionRange(pos, pos);
+    };
+    document.getElementById("secSel").onchange = function (e) { sectionFilter = e.target.value; render(); };
+    document.getElementById("csvBtn").onclick = exportCSV;
+    Array.prototype.forEach.call(app.querySelectorAll("th[data-sort]"), function (h) {
+      h.onclick = function () {
+        var k = h.getAttribute("data-sort");
+        if (sortKey === k) sortDir = -sortDir; else { sortKey = k; sortDir = (k === "name" || k === "section") ? 1 : -1; }
+        render();
+      };
+    });
+    Array.prototype.forEach.call(app.querySelectorAll("tbody tr"), function (tr) {
+      var go = function () { openStudent(tr.getAttribute("data-u")); };
+      tr.onclick = go; tr.onkeydown = function (e) { if (e.key === "Enter") go(); };
+    });
+  }
+
+  function csvCell(v) {
+    v = String(v == null ? "" : v);
+    if (/^[=+\-@]/.test(v)) v = "'" + v; // stop spreadsheet formula injection
+    return '"' + v.replace(/"/g, '""') + '"';
+  }
+  function exportCSV() {
+    var head = ["Name", "Username", "Section", "Chapters done", "Total chapters", "Percent", "Maths practice stars"]
+      .concat(courses.map(function (c) { return c.title + " done"; })).concat(["Last active"]);
+    var rows = visible().map(function (s) {
+      return [s.name, s.username, s.section || "", s.summary.done, s.summary.total, s.summary.pct, s.summary.practiceStars]
+        .concat(courses.map(function (c) { return s.summary.courses[c.id].done; }))
+        .concat([s.summary.lastActive ? new Date(s.summary.lastActive).toISOString() : ""]);
+    });
+    var csv = [head].concat(rows).map(function (r) { return r.map(csvCell).join(","); }).join("\r\n");
+    var a = document.createElement("a");
+    a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv" }));
+    a.download = "class-progress.csv"; a.click();
+    setTimeout(function () { URL.revokeObjectURL(a.href); }, 1000);
+  }
+
+  // ---------- student detail dialog ----------
+  var dlg = document.getElementById("dlg");
+  document.getElementById("dlgClose").onclick = function () { dlg.close(); };
+  dlg.addEventListener("close", function () { loadStudents().then(render).catch(function () {}); });
+
+  async function openStudent(username) {
+    var d;
+    try { d = await P.api("/teacher/student/" + encodeURIComponent(username)); } catch (e) { return P.toast(e.message); }
+    drawDetail(d);
+    if (!dlg.open) dlg.showModal();
+  }
+
+  function drawDetail(d) {
+    var u = d.student.username;
+    document.getElementById("dlgTitle").textContent = d.student.name;
+    document.getElementById("dlgSub").textContent = u + (d.student.section ? " · Section " + d.student.section : "") + " · Last active " + P.timeAgo(d.summary.lastActive);
+    var body = document.getElementById("dlgBody");
+    var courseBlocks = courses.map(function (c) {
+      var s = d.summary.courses[c.id];
+      var rows = c.chapters.map(function (title, i) {
+        var n = i + 1, rec = d.progress.chapters[c.id + ":" + n], st = rec ? rec.status : "not_started";
+        var stars = "";
+        if (c.practice) {
+          var p = d.progress.practice["maths:" + n];
+          var t = p ? (p.stars[0] || 0) + (p.stars[1] || 0) : 0;
+          stars = "<span class='stars'>" + (t ? P.starString(t, 6) : "") + "</span>";
+        } else stars = "<span></span>";
+        return "<li><span class='ch-num'>" + n + "</span><span class='ch-title'>" + P.esc(title) + "</span>" + stars +
+          "<select data-course='" + c.id + "' data-ch='" + n + "' aria-label='Status for " + P.esc(c.unitLabel) + " " + n + "'>" +
+          ["not_started", "reading", "done"].map(function (v) { return "<option value='" + v + "'" + (v === st ? " selected" : "") + ">" + P.STATUS_LABEL[v] + "</option>"; }).join("") +
+          "</select></li>";
+      }).join("");
+      return "<details class='course'><summary><span class='emoji'>" + c.emoji + "</span><span class='c-title'>" + P.esc(c.title) + "</span>" +
+        "<span class='c-count'>" + s.done + " / " + s.total + "</span><span class='c-book'>" + P.esc(c.book) + "</span>" +
+        "<span class='c-bar bar teal'><i style='width:" + P.pct(s.done, s.total) + "%'></i></span></summary><ul class='chapters'>" + rows + "</ul></details>";
+    }).join("");
+
+    body.innerHTML =
+      "<section class='stats'>" +
+      "<div class='stat'><div class='num'>" + d.summary.pct + "%</div><div class='lbl'>chapters finished</div></div>" +
+      "<div class='stat'><div class='num'>" + d.summary.practiceStars + "/" + d.summary.practiceMax + " ★</div><div class='lbl'>Maths practice</div></div></section>" +
+      courseBlocks +
+      "<h3 class='section-title' style='font-size:17px'>Add a note (visible to the student and parents)</h3>" +
+      "<form id='noteForm'><textarea id='noteText' rows='2' maxlength='500' placeholder='e.g. Great effort on fractions this week!'></textarea>" +
+      "<p style='margin:8px 0 0'><button class='btn' type='submit'>Save note</button></p></form>" +
+      "<div style='margin-top:14px' id='notesList'>" + P.notesHTML(d.progress.notes) + "</div>" +
+      "<h3 class='section-title' style='font-size:17px'>Recent activity</h3>" + P.activityHTML(d.progress.activity, cmap) +
+      "<h3 class='section-title' style='font-size:17px'>Reset password</h3>" +
+      "<form id='pwForm' style='display:flex;gap:10px;flex-wrap:wrap'><input id='newPw' type='text' minlength='6' placeholder='New password (min 6 characters)' style='flex:1 1 220px' autocomplete='off'>" +
+      "<button class='btn-ghost' type='submit'>Reset</button></form>";
+
+    Array.prototype.forEach.call(body.querySelectorAll("select[data-ch]"), function (sel) {
+      sel.onchange = async function () {
+        sel.disabled = true;
+        try {
+          var r = await P.api("/progress/chapter", { body: { student: u, course: sel.getAttribute("data-course"), chapter: Number(sel.getAttribute("data-ch")), status: sel.value } });
+          d.progress = r.progress; d.summary = r.summary;
+          var openIds = Array.from(body.querySelectorAll("details.course")).map(function (x) { return x.open; });
+          drawDetail(d);
+          Array.prototype.forEach.call(document.getElementById("dlgBody").querySelectorAll("details.course"), function (x, i) { x.open = openIds[i]; });
+          P.toast("Saved");
+        } catch (e) { P.toast(e.message); sel.disabled = false; }
+      };
+    });
+    document.getElementById("noteForm").onsubmit = async function (ev) {
+      ev.preventDefault();
+      var t = document.getElementById("noteText").value.trim(); if (!t) return;
+      try {
+        var r = await P.api("/teacher/note", { body: { student: u, text: t } });
+        d.progress.notes = r.notes; document.getElementById("noteText").value = "";
+        document.getElementById("notesList").innerHTML = P.notesHTML(r.notes); P.toast("Note saved");
+      } catch (e) { P.toast(e.message); }
+    };
+    document.getElementById("pwForm").onsubmit = async function (ev) {
+      ev.preventDefault();
+      var pw = document.getElementById("newPw").value;
+      try { await P.api("/teacher/reset-password", { body: { student: u, password: pw } }); document.getElementById("newPw").value = ""; P.toast("Password reset. Tell the student their new password."); }
+      catch (e) { P.toast(e.message); }
+    };
+  }
+
+  render();
+})();
+</script>
+</body>
+</html>

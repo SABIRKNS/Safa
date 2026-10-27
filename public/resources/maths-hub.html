@@ -1,0 +1,768 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Maths Explorer Hub — All Chapters</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #FBF5E9;
+    --paper-dot: rgba(33,48,74,0.10);
+    --ink: #21304A;
+    --ink-soft: #5A6580;
+    --card: #FFFFFF;
+    --card-border: #E4D9BF;
+    --gold: #D9A22B;
+    --gold-ink: #55400A;
+    --teal: #167A67;
+    --teal-tint: #E3F3EE;
+    --raspberry: #C23B56;
+    --raspberry-tint: #FBEAEE;
+    --sky: #3F6FB0;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper: #171B26; --paper-dot: rgba(241,236,221,0.08); --ink: #F1ECDD; --ink-soft: #B9BFCF;
+      --card: #212636; --card-border: #333B52; --gold: #E7B84B; --gold-ink: #2A2109;
+      --teal: #2FBF9E; --teal-tint: #16302B; --raspberry: #E06481; --raspberry-tint: #35202A; --sky: #6C9BE0;
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper: #171B26; --paper-dot: rgba(241,236,221,0.08); --ink: #F1ECDD; --ink-soft: #B9BFCF;
+    --card: #212636; --card-border: #333B52; --gold: #E7B84B; --gold-ink: #2A2109;
+    --teal: #2FBF9E; --teal-tint: #16302B; --raspberry: #E06481; --raspberry-tint: #35202A; --sky: #6C9BE0;
+  }
+  * { box-sizing: border-box; }
+  :root { padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
+  html { scroll-padding-top: env(safe-area-inset-top, 0px); }
+  body {
+    margin: 0; min-height: 100vh; background-color: var(--paper);
+    background-image: radial-gradient(var(--paper-dot) 1.4px, transparent 1.4px);
+    background-size: 22px 22px; color: var(--ink);
+    font-family: 'Inter', system-ui, -apple-system, sans-serif; line-height: 1.55;
+  }
+  h1, h2, h3 { font-family: 'Fraunces', Georgia, serif; font-weight: 600; letter-spacing: -0.01em; margin: 0; }
+  .app { max-width: 820px; margin: 0 auto; padding: 26px 18px 60px; }
+  .topbar { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 18px; flex-wrap: wrap; }
+  .brand { display: flex; align-items: center; gap: 12px; }
+  .brand-mark { font-size: 28px; transform: rotate(-8deg); display: inline-block; }
+  .brand h1 { font-size: 19px; line-height: 1.15; }
+  .topbar-actions { display: flex; gap: 8px; }
+  .ghost-btn {
+    font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 600; color: var(--ink-soft);
+    background: transparent; border: 1.5px solid var(--card-border); border-radius: 8px;
+    padding: 7px 12px; cursor: pointer; white-space: nowrap;
+  }
+  .ghost-btn:hover { border-color: var(--ink-soft); color: var(--ink); }
+  .ghost-btn:focus-visible, .primary-btn:focus-visible, .choice-btn:focus-visible, .chapter-card:focus-visible {
+    outline: 3px solid var(--sky); outline-offset: 2px;
+  }
+  .primary-btn {
+    font-family: 'Inter', sans-serif; font-size: 15px; font-weight: 700; color: var(--gold-ink);
+    background: var(--gold); border: none; border-radius: 8px; padding: 12px 22px; cursor: pointer;
+    box-shadow: 0 3px 0 rgba(0,0,0,0.15); transform: rotate(-0.3deg); transition: transform 0.12s ease;
+  }
+  .primary-btn:hover { transform: rotate(-0.3deg) translateY(-1px); }
+  .primary-btn:active { transform: rotate(-0.3deg) translateY(1px); box-shadow: 0 1px 0 rgba(0,0,0,0.15); }
+  .primary-btn:disabled { opacity: 0.5; cursor: default; }
+
+  .dash-header {
+    background: var(--card); border: 1.5px solid var(--card-border); border-radius: 10px;
+    padding: 18px 20px; margin-bottom: 18px;
+  }
+  .dash-header .stat-row { display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
+  .dash-header .stat-big { font-size: 22px; font-weight: 700; }
+  .dash-header .stat-sub { font-size: 13px; color: var(--ink-soft); }
+  .progress-outer { width: 100%; height: 10px; background: var(--card-border); border-radius: 99px; overflow: hidden; }
+  .progress-inner { height: 100%; background: var(--gold); transition: width 0.4s ease; }
+
+  .dashboard-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 14px; }
+  .chapter-card {
+    background: var(--card); border: 1.5px solid var(--card-border); border-radius: 10px;
+    padding: 14px; display: flex; flex-direction: column; gap: 6px; cursor: pointer; text-align: left;
+    font-family: 'Inter', sans-serif;
+  }
+  .chapter-card:hover { border-color: var(--sky); }
+  .chapter-card .card-top { display: flex; align-items: center; justify-content: space-between; }
+  .num-chip {
+    width: 24px; height: 24px; border-radius: 50%; background: var(--sky); color: #fff;
+    font-size: 11.5px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  .chapter-card .emoji { font-size: 20px; }
+  .chapter-card h3 { font-size: 14.5px; line-height: 1.3; margin-top: 2px; }
+  .stars-mini { font-size: 13px; letter-spacing: 1px; color: var(--gold); }
+  .status-tag { font-size: 10.5px; font-weight: 700; color: var(--ink-soft); text-transform: none; }
+  .status-tag.completed { color: var(--teal); }
+  .status-tag.progress { color: var(--gold-ink); }
+
+  .back-link { background: none; border: none; color: var(--sky); font-weight: 700; font-size: 13.5px; cursor: pointer; padding: 0; margin-bottom: 12px; }
+
+  .mini-dots { display: flex; gap: 6px; margin: 2px 0 14px; }
+  .mini-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--card-border); }
+  .mini-dot.active { background: var(--gold); }
+  .mini-dot.done { background: var(--teal); }
+
+  .station-card, .intro-card, .summary-card {
+    background: var(--card); border: 1.5px solid var(--card-border); border-radius: 10px;
+    padding: 24px 22px 22px; box-shadow: 0 10px 26px rgba(33,48,74,0.08); transform: rotate(0.15deg);
+  }
+  .kicker { font-size: 12.5px; font-weight: 700; color: var(--sky); margin: 0 0 6px; }
+  .station-card h2, .summary-card h2, .intro-card h2 { font-size: 22px; margin-bottom: 8px; }
+  .prompt { color: var(--ink); font-weight: 500; margin: 6px 0 0; max-width: 60ch; }
+  .visual { margin: 14px 0 4px; display: flex; justify-content: center; }
+
+  .seq-row { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+  .num-box {
+    min-width: 44px; height: 44px; display: flex; align-items: center; justify-content: center;
+    border: 2px solid var(--sky); border-radius: 8px; font-weight: 700; font-size: 16px;
+    background: rgba(63,111,176,0.06);
+  }
+  .num-box.blank { border-style: dashed; border-color: var(--gold); background: rgba(217,162,43,0.12); color: var(--gold-ink); }
+
+  .reference-row { display: flex; flex-wrap: wrap; gap: 20px; justify-content: center; margin-bottom: 4px; }
+  .tower { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+  .tower-dots { display: flex; flex-direction: column; gap: 4px; align-items: center; }
+  .dot-row { display: flex; gap: 4px; }
+  .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--raspberry); }
+  .tower-label { font-size: 11.5px; color: var(--ink-soft); font-weight: 600; }
+
+  .big-number, .big-letter { font-family: 'Fraunces', serif; font-size: 48px; font-weight: 700; text-align: center; padding: 6px 0; }
+  .data-list { font-size: 17px; font-weight: 600; text-align: center; padding: 8px 0; }
+
+  .bar-svg { width: 220px; height: 140px; }
+  .rect-svg { width: 150px; height: 110px; }
+  .angle-svg { width: 140px; height: 120px; }
+  .frac-svg { width: 190px; height: 54px; }
+  .poly-svg { width: 90px; height: 90px; }
+
+  .choice-grid { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 6px; justify-content: center; }
+  .choice-btn {
+    font-family: 'Inter', sans-serif; font-size: 14.5px; font-weight: 600; background: var(--card);
+    border: 2px solid var(--card-border); border-radius: 9px; padding: 10px 16px;
+    display: flex; align-items: center; gap: 8px; cursor: pointer; color: var(--ink);
+  }
+  .choice-btn:hover { border-color: var(--sky); }
+  .choice-btn:disabled { cursor: default; }
+  .choice-btn.correct { border-color: var(--teal); background: var(--teal-tint); }
+  .choice-btn.incorrect { border-color: var(--raspberry); background: var(--raspberry-tint); }
+
+  .number-input-row { display: flex; gap: 10px; margin-top: 10px; flex-wrap: wrap; justify-content: center; }
+  .number-input-row input {
+    font-family: 'Inter', sans-serif; font-size: 17px; font-weight: 600; width: 110px; padding: 10px 12px;
+    border: 2px solid var(--card-border); border-radius: 8px; background: var(--paper); color: var(--ink);
+  }
+  .number-input-row input:focus { border-color: var(--sky); outline: none; }
+
+  .hint-row { margin-top: 16px; text-align: center; }
+  .hint-box { margin-top: 10px; background: rgba(217,162,43,0.12); border-left: 3px solid var(--gold); padding: 10px 14px; border-radius: 6px; font-size: 14px; text-align: left; }
+  .hint-box p { margin: 4px 0; }
+
+  .feedback { margin-top: 16px; padding: 14px 16px; border-radius: 8px; font-size: 14.5px; }
+  .feedback.correct { background: var(--teal-tint); border: 1.5px solid var(--teal); }
+  .feedback.incorrect { background: var(--raspberry-tint); border: 1.5px solid var(--raspberry); }
+  .fb-title { font-weight: 700; margin-bottom: 4px; font-size: 15px; }
+  .feedback.correct .fb-title { color: var(--teal); }
+  .feedback.incorrect .fb-title { color: var(--raspberry); }
+  .fb-explain { color: var(--ink-soft); margin-top: 6px; }
+  .stars { font-size: 16px; letter-spacing: 2px; margin-top: 4px; }
+
+  .nav-row { margin-top: 20px; display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+
+  .recap-item { border: 1.5px solid var(--card-border); border-radius: 8px; padding: 12px 14px; margin-bottom: 10px; }
+  .recap-item .q-prompt { font-weight: 600; margin-bottom: 4px; }
+
+  .summary-list { list-style: none; padding: 0; margin: 14px 0; display: flex; flex-direction: column; gap: 8px; }
+  .summary-list li { display: flex; align-items: center; justify-content: space-between; padding: 9px 13px; border: 1.5px solid var(--card-border); border-radius: 8px; font-size: 14px; font-weight: 600; }
+  .summary-total { margin-top: 12px; font-size: 19px; font-weight: 700; }
+
+  .foot { text-align: center; margin-top: 30px; }
+  .foot p { font-size: 12px; color: var(--ink-soft); }
+
+  .confetti-piece { position: fixed; top: -10px; width: 8px; height: 8px; border-radius: 2px; pointer-events: none; z-index: 50; animation: fall 1100ms ease-in forwards; }
+  @keyframes fall { to { transform: translateY(70vh) rotate(300deg); opacity: 0; } }
+  @media (prefers-reduced-motion: reduce) {
+    .confetti-piece { display: none; }
+    .primary-btn, .primary-btn:hover, .primary-btn:active { transform: none; }
+  }
+  @media (max-width: 480px) {
+    .app { padding: 16px 12px 40px; }
+    .brand h1 { font-size: 16px; }
+    .station-card, .intro-card, .summary-card { padding: 18px 15px; }
+    .dashboard-grid { grid-template-columns: repeat(auto-fill, minmax(135px, 1fr)); }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-mark">📘</span>
+      <h1>Maths Explorer Hub<br>All 10 Chapters</h1>
+    </div>
+    <div class="topbar-actions">
+      <button class="ghost-btn" id="homeBtn">🏠 Dashboard</button>
+      <button class="ghost-btn" id="resetBtn">Reset progress</button>
+    </div>
+  </header>
+
+  <main id="main"></main>
+
+  <footer class="foot">
+    <p>Original practice activities covering all 10 Class VI Maths chapters — not reproduced from any textbook.</p>
+  </footer>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  var CHAPTERS_META = [
+    { title: "Patterns in Mathematics", emoji: "🔎" },
+    { title: "Lines and Angles", emoji: "📐" },
+    { title: "Number Play", emoji: "🔢" },
+    { title: "Data Handling and Presentation", emoji: "📊" },
+    { title: "Prime Time", emoji: "🧮" },
+    { title: "Perimeter and Area", emoji: "📏" },
+    { title: "Fractions", emoji: "🍰" },
+    { title: "Playing with Constructions", emoji: "✏️" },
+    { title: "Symmetry", emoji: "🦋" },
+    { title: "The Other Side of Zero", emoji: "🌡️" }
+  ];
+  var LP_USER = null, LP_TOKEN = null, LP_ROLE = null;
+  try { LP_USER = localStorage.getItem("lp_user"); LP_TOKEN = localStorage.getItem("lp_token"); LP_ROLE = localStorage.getItem("lp_role"); } catch (e) {}
+  var STORAGE_KEY = "mathsExplorerHub_v1" + (LP_USER ? "_" + LP_USER : "");
+
+  // Send each solved question to the portal so parents and teachers can see it (students only).
+  function reportPractice(chIdx, qi, stars) {
+    if (!LP_TOKEN || LP_ROLE !== "student") return;
+    try {
+      fetch("/api/progress/practice", {
+        method: "POST",
+        headers: { "content-type": "application/json", "authorization": "Bearer " + LP_TOKEN },
+        body: JSON.stringify({ course: "maths", chapter: chIdx + 1, q: qi, stars: stars })
+      }).catch(function () {});
+    } catch (e) {}
+  }
+
+  function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+  function randInt(a, b) { return a + Math.floor(Math.random() * (b - a + 1)); }
+  function shuffle(arr) {
+    var a = arr.slice();
+    for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)); var t = a[i]; a[i] = a[j]; a[j] = t; }
+    return a;
+  }
+
+  function seqBoxesHTML(seq) {
+    return '<div class="seq-row">' + seq.map(function (v) {
+      return v === null ? '<div class="num-box blank">?</div>' : '<div class="num-box">' + v + '</div>';
+    }).join('') + '</div>';
+  }
+  function dotTriangleHTML(rows, label) {
+    var rowsHtml = '';
+    for (var r = 1; r <= rows; r++) {
+      var dots = ''; for (var d = 0; d < r; d++) { dots += '<span class="dot"></span>'; }
+      rowsHtml += '<div class="dot-row">' + dots + '</div>';
+    }
+    return '<div class="tower"><div class="tower-dots">' + rowsHtml + '</div><div class="tower-label">' + label + '</div></div>';
+  }
+  function angleSVG(deg, color) {
+    var vx = 20, vy = 100, len = 80;
+    var rad = deg * Math.PI / 180;
+    var x2 = vx + len * Math.cos(rad), y2 = vy - len * Math.sin(rad);
+    var arcR = 22, ax1 = vx + arcR, ay1 = vy;
+    var ax2 = vx + arcR * Math.cos(rad), ay2 = vy - arcR * Math.sin(rad);
+    var largeArc = deg > 180 ? 1 : 0;
+    var path = 'M ' + ax1 + ' ' + ay1 + ' A ' + arcR + ' ' + arcR + ' 0 ' + largeArc + ' 1 ' + ax2 + ' ' + ay2;
+    return '<svg viewBox="0 0 140 120" class="angle-svg" aria-hidden="true">' +
+      '<line x1="' + vx + '" y1="' + vy + '" x2="' + (vx + len) + '" y2="' + vy + '" stroke="' + color + '" stroke-width="4" stroke-linecap="round"/>' +
+      '<line x1="' + vx + '" y1="' + vy + '" x2="' + x2 + '" y2="' + y2 + '" stroke="' + color + '" stroke-width="4" stroke-linecap="round"/>' +
+      '<path d="' + path + '" fill="none" stroke="' + color + '" stroke-width="2" opacity="0.6"/>' +
+      '<circle cx="' + vx + '" cy="' + vy + '" r="3" fill="' + color + '"/></svg>';
+  }
+  function linesSVG(type, color) {
+    if (type === 'parallel') return '<svg viewBox="0 0 140 100" class="angle-svg"><line x1="10" y1="30" x2="130" y2="30" stroke="' + color + '" stroke-width="4"/><line x1="10" y1="70" x2="130" y2="70" stroke="' + color + '" stroke-width="4"/></svg>';
+    if (type === 'perpendicular') return '<svg viewBox="0 0 140 100" class="angle-svg"><line x1="20" y1="85" x2="20" y2="10" stroke="' + color + '" stroke-width="4"/><line x1="20" y1="85" x2="120" y2="85" stroke="' + color + '" stroke-width="4"/><rect x="20" y="72" width="13" height="13" fill="none" stroke="' + color + '" stroke-width="2"/></svg>';
+    return '<svg viewBox="0 0 140 100" class="angle-svg"><line x1="10" y1="15" x2="120" y2="85" stroke="' + color + '" stroke-width="4"/><line x1="15" y1="85" x2="125" y2="15" stroke="' + color + '" stroke-width="4"/></svg>';
+  }
+  function barChartSVG(labels, values, colors2) {
+    var w = 220, h = 140, padBottom = 22, padTop = 14, barGap = 12;
+    var max = Math.max.apply(null, values), n = values.length;
+    var barW = (w - (n + 1) * barGap) / n, bars = '', labelsHtml = '';
+    for (var i = 0; i < n; i++) {
+      var barH = (values[i] / max) * (h - padBottom - padTop);
+      var x = barGap + i * (barW + barGap), y = h - padBottom - barH;
+      bars += '<rect x="' + x + '" y="' + y + '" width="' + barW + '" height="' + barH + '" fill="' + colors2[i % colors2.length] + '" rx="3"/>';
+      bars += '<text x="' + (x + barW / 2) + '" y="' + (y - 4) + '" font-size="10" text-anchor="middle" fill="' + "#5A6580" + '">' + values[i] + '</text>';
+      labelsHtml += '<text x="' + (x + barW / 2) + '" y="' + (h - 6) + '" font-size="9" text-anchor="middle" fill="' + "#5A6580" + '">' + labels[i] + '</text>';
+    }
+    return '<svg viewBox="0 0 ' + w + ' ' + h + '" class="bar-svg">' + bars + labelsHtml + '</svg>';
+  }
+  function fractionBarSVG(total, shaded, color) {
+    var w = 180, h = 50, segW = w / total, rects = '';
+    for (var i = 0; i < total; i++) {
+      var filled = i < shaded;
+      rects += '<rect x="' + (i * segW) + '" y="0" width="' + segW + '" height="' + h + '" fill="' + (filled ? color : 'transparent') + '" fill-opacity="' + (filled ? 0.55 : 0) + '" stroke="' + color + '" stroke-width="2"/>';
+    }
+    return '<svg viewBox="0 0 ' + w + ' ' + h + '" class="frac-svg">' + rects + '</svg>';
+  }
+  function polygonSVG(n, color) {
+    var cx = 60, cy = 60, r = 44, pts = [];
+    for (var i = 0; i < n; i++) {
+      var angle = (Math.PI * 2 * i) / n - Math.PI / 2;
+      pts.push((cx + r * Math.cos(angle)).toFixed(1) + ',' + (cy + r * Math.sin(angle)).toFixed(1));
+    }
+    return '<svg viewBox="0 0 120 120" class="poly-svg" aria-hidden="true"><polygon points="' + pts.join(' ') + '" fill="' + color + '" fill-opacity="0.18" stroke="' + color + '" stroke-width="4" stroke-linejoin="round"/></svg>';
+  }
+  function rectSVG(l, w, color) {
+    var maxDim = Math.max(l, w), scale = 90 / maxDim, rw = l * scale, rh = w * scale;
+    var W = 150, H = 110, x = (W - rw) / 2, y = (H - rh) / 2 - 6;
+    return '<svg viewBox="0 0 ' + W + ' ' + H + '" class="rect-svg" aria-hidden="true">' +
+      '<rect x="' + x + '" y="' + y + '" width="' + rw + '" height="' + rh + '" fill="' + color + '" fill-opacity="0.15" stroke="' + color + '" stroke-width="3"/>' +
+      '<text x="' + (x + rw / 2) + '" y="' + (y + rh + 16) + '" font-size="11" text-anchor="middle" fill="#5A6580">' + l + ' cm</text>' +
+      '<text x="' + (x - 8) + '" y="' + (y + rh / 2) + '" font-size="11" text-anchor="end" fill="#5A6580" transform="rotate(-90 ' + (x - 8) + ' ' + (y + rh / 2) + ')">' + w + ' cm</text></svg>';
+  }
+  function isPrime(n) { if (n < 2) return false; for (var i = 2; i * i <= n; i++) { if (n % i === 0) return false; } return true; }
+
+  // ---------- question generators ----------
+  function genPatternsSeq() {
+    var pool = [
+      { seq: [2,5,8,11,null,17], answer: 14, hints: ["Compare each number to the one before it — what's added each time?","Every number is 3 more than the last: 2→5→8→11→?→17."], explain: "Arithmetic pattern with common difference 3, so the missing number is 11 + 3 = 14." },
+      { seq: [50,45,40,null,30,25], answer: 35, hints: ["This sequence goes down — by how much each time?","Each number is 5 less than the one before it."], explain: "Each term decreases by 5, so after 40 comes 40 − 5 = 35." },
+      { seq: [1,2,4,8,null,32], answer: 16, hints: ["Try doubling instead of adding a fixed amount.","Each number is double the one before it."], explain: "Each term is multiplied by 2: 1, 2, 4, 8, 16, 32." },
+      { seq: [3,6,9,null,15,18], answer: 12, hints: ["This one follows a familiar times table.","Every number is 3 more than the last — the 3 times table!"], explain: "These are multiples of 3: 3, 6, 9, 12, 15, 18." }
+    ];
+    var q = pick(pool);
+    return { visualHTML: seqBoxesHTML(q.seq), prompt: "Figure out the rule, then type the missing number.", type: "number", answer: q.answer, hints: q.hints, explain: q.explain };
+  }
+  function genPatternsTriangle() {
+    var n = randInt(4, 7), answer = (n * (n + 1)) / 2, prevTotal = ((n - 1) * n) / 2;
+    var ref = '<div class="reference-row">' + dotTriangleHTML(1, "Tower 1 = 1 dot") + dotTriangleHTML(2, "Tower 2 = 3 dots") + dotTriangleHTML(3, "Tower 3 = 6 dots") + '</div>';
+    return { visualHTML: ref, prompt: "If the pattern continues, how many dots would Tower " + n + " have in total?", type: "number", answer: answer,
+      hints: ["Each new tower adds one more row than the tower before it — how many dots in row " + n + " alone?", "Tower " + (n - 1) + " has " + prevTotal + " dots. Add a row of " + n + " dots to get Tower " + n + "."],
+      explain: "Triangular numbers grow by one extra row each time. Tower " + n + " = 1+2+...+" + n + " = " + answer + " dots." };
+  }
+  function genAngleType() {
+    var pools = { Acute: [30,45,60,70], Right: [90], Obtuse: [100,120,135,150], Straight: [180], Reflex: [200,240,270,300,330] };
+    var cats = Object.keys(pools), cat = pick(cats), deg = pick(pools[cat]);
+    var rules = { Acute: "less than 90°", Right: "exactly 90°", Obtuse: "more than 90° but less than 180°", Straight: "exactly 180°, forming a straight line", Reflex: "more than 180°" };
+    var choices = shuffle(cats).map(function (c) { return { value: c, html: '<span>' + c + '</span>' }; });
+    return { visualHTML: angleSVG(deg, "#3F6FB0"), prompt: "This angle measures " + deg + "°. What type of angle is it?", type: "choice", choices: choices, answer: cat,
+      hints: ["Acute is under 90°, right is exactly 90°, obtuse is between 90° and 180°, straight is exactly 180°, and reflex is over 180°.", "This angle is " + deg + "°, which is " + rules[cat] + "."],
+      explain: "An angle of " + deg + "° is called '" + cat + "' because it is " + rules[cat] + "." };
+  }
+  function genLineRelation() {
+    var types = [{ key: 'parallel', label: 'Parallel lines' }, { key: 'perpendicular', label: 'Perpendicular lines' }, { key: 'intersecting', label: 'Intersecting lines' }];
+    var t = pick(types);
+    var choices = shuffle(types).map(function (x) { return { value: x.label, html: '<span>' + x.label + '</span>' }; });
+    var explain = t.key === 'parallel' ? "These lines never meet and stay the same distance apart, so they are parallel." :
+      (t.key === 'perpendicular' ? "These lines cross at a perfect right angle (90°), so they are perpendicular." :
+      "These lines cross at an angle that isn't 90°, so they are simply intersecting lines.");
+    return { visualHTML: linesSVG(t.key, "#167A67"), prompt: "How would you describe these two lines?", type: "choice", choices: choices, answer: t.label,
+      hints: ["Parallel lines never meet. Perpendicular lines cross at a perfect right angle. Anything else crossing is just 'intersecting'.", "Look carefully — do these lines cross, and at what kind of angle?"], explain: explain };
+  }
+  function genDivBy3() {
+    var n = randInt(10, 300);
+    var digitSum = String(n).split('').reduce(function (a, b) { return a + Number(b); }, 0);
+    var divisible = (digitSum % 3 === 0);
+    var choices = [{ value: 'Yes', html: '<span>Yes</span>' }, { value: 'No', html: '<span>No</span>' }];
+    return { visualHTML: '<div class="big-number">' + n + '</div>', prompt: "Is " + n + " divisible by 3?", type: "choice", choices: choices, answer: divisible ? 'Yes' : 'No',
+      hints: ["A number is divisible by 3 if the sum of its digits is divisible by 3.", "The digits of " + n + " add up to " + digitSum + ". Is " + digitSum + " divisible by 3?"],
+      explain: "The digit sum of " + n + " is " + digitSum + ", which is " + (divisible ? "" : "not ") + "divisible by 3, so " + n + " is " + (divisible ? "" : "not ") + "divisible by 3." };
+  }
+  function genPalindrome() {
+    var isPal = Math.random() < 0.5, n;
+    if (isPal) { var a = randInt(1, 9), b = randInt(0, 9); n = Number('' + a + b + a); }
+    else { do { n = randInt(100, 999); } while (String(n) === String(n).split('').reverse().join('')); }
+    var rev = String(n).split('').reverse().join('');
+    var choices = [{ value: 'Yes', html: '<span>Yes</span>' }, { value: 'No', html: '<span>No</span>' }];
+    return { visualHTML: '<div class="big-number">' + n + '</div>', prompt: "Is " + n + " a palindrome?", type: "choice", choices: choices, answer: isPal ? 'Yes' : 'No',
+      hints: ["A palindrome reads the same forwards and backwards.", "Reversed, " + n + " becomes " + rev + ". Is that the same number?"],
+      explain: "Reversing " + n + " gives " + rev + ", which is " + (isPal ? "the same" : "different") + ", so it " + (isPal ? "is" : "is not") + " a palindrome." };
+  }
+  function genBarChart() {
+    var names = ["Apple", "Banana", "Mango", "Grapes"];
+    var values, maxV, maxIdx;
+    do { values = names.map(function () { return randInt(2, 10); }); maxV = Math.max.apply(null, values); }
+    while (values.filter(function (v) { return v === maxV; }).length > 1);
+    maxIdx = values.indexOf(maxV);
+    var colors = ["#D9A22B", "#167A67", "#C23B56", "#3F6FB0"];
+    var choices = shuffle(names).map(function (nm) { return { value: nm, html: '<span>' + nm + '</span>' }; });
+    return { visualHTML: barChartSVG(names, values, colors), prompt: "This chart shows how many classmates picked each fruit as their favourite. Which fruit is most popular?", type: "choice", choices: choices, answer: names[maxIdx],
+      hints: ["Look at which bar reaches the highest point on the chart.", "The tallest bar belongs to " + names[maxIdx] + ", with " + maxV + " votes."],
+      explain: "'" + names[maxIdx] + "' has the tallest bar with " + maxV + " votes, so it's the class favourite." };
+  }
+  function genMode() {
+    var modeVal = randInt(2, 9), others = [];
+    while (others.length < 3) { var v = randInt(1, 10); if (v !== modeVal) others.push(v); }
+    var list = shuffle([modeVal, modeVal, modeVal].concat(others));
+    return { visualHTML: '<div class="data-list">' + list.join(', ') + '</div>', prompt: "What is the mode of this list of numbers?", type: "number", answer: modeVal,
+      hints: ["The mode is the number that appears most often in the list.", "Count how many times each number shows up — one of them appears three times."],
+      explain: "In this list, " + modeVal + " appears more often than any other number, so it is the mode." };
+  }
+  function genPrimeCheck() {
+    var n = randInt(2, 50), prime = isPrime(n), factorHint = '';
+    if (!prime) { for (var i = 2; i < n; i++) { if (n % i === 0) { factorHint = i; break; } } }
+    var choices = [{ value: 'Prime', html: '<span>Prime</span>' }, { value: 'Composite', html: '<span>Composite</span>' }];
+    return { visualHTML: '<div class="big-number">' + n + '</div>', prompt: "Is " + n + " prime or composite?", type: "choice", choices: choices, answer: prime ? 'Prime' : 'Composite',
+      hints: ["A prime number has exactly two factors: 1 and itself. A composite number has more than two.", prime ? "Try dividing " + n + " by 2, 3, 5, 7 — nothing divides it evenly except 1 and itself." : "Try dividing " + n + " by small numbers — " + factorHint + " divides it evenly!"],
+      explain: prime ? n + " has no factors other than 1 and itself, so it is prime." : n + " can be divided evenly by " + factorHint + ", so it has more than two factors — it's composite." };
+  }
+  function genFactorPick() {
+    var n = pick([12,18,20,24,28,30,36,40,42,45]);
+    var factors = []; for (var i = 1; i <= n; i++) { if (n % i === 0) factors.push(i); }
+    var correct = pick(factors.filter(function (f) { return f !== 1 && f !== n; }));
+    var nonFactors = [];
+    for (var j = 2; j < n + 8 && nonFactors.length < 3; j++) { if (n % j !== 0 && j !== correct) nonFactors.push(j); }
+    var choices = shuffle([correct].concat(nonFactors.slice(0, 3))).map(function (v) { return { value: String(v), html: '<span>' + v + '</span>' }; });
+    return { visualHTML: '<div class="big-number">' + n + '</div>', prompt: "Which of these numbers is a factor of " + n + "?", type: "choice", choices: choices, answer: String(correct),
+      hints: ["A factor of " + n + " divides into it with nothing left over.", "Try dividing " + n + " by each option — " + correct + " goes in exactly " + (n / correct) + " times."],
+      explain: correct + " × " + (n / correct) + " = " + n + ", so " + correct + " is a factor of " + n + "." };
+  }
+  function genPerimeter() {
+    var l = randInt(4, 15), w = randInt(3, 12), answer = 2 * (l + w);
+    return { visualHTML: rectSVG(l, w, "#3F6FB0"), prompt: "A rectangle has length " + l + " cm and breadth " + w + " cm. What is its perimeter?", type: "number", answer: answer,
+      hints: ["Perimeter is the total distance around the shape — add up all four sides.", "Perimeter = 2 × (length + breadth) = 2 × (" + l + " + " + w + ")."],
+      explain: "Perimeter = 2 × (" + l + " + " + w + ") = " + answer + " cm." };
+  }
+  function genArea() {
+    var l = randInt(4, 15), w = randInt(3, 12), answer = l * w;
+    return { visualHTML: rectSVG(l, w, "#167A67"), prompt: "A rectangle has length " + l + " cm and breadth " + w + " cm. What is its area?", type: "number", answer: answer,
+      hints: ["Area tells you how much surface the rectangle covers — multiply the two sides.", "Area = length × breadth = " + l + " × " + w + "."],
+      explain: "Area = " + l + " × " + w + " = " + answer + " cm²." };
+  }
+  function genFractionShaded() {
+    var n = randInt(5, 8), m = randInt(1, n - 1);
+    var others = [];
+    for (var k = 1; k <= n - 1; k++) { if (k !== m) others.push(k); }
+    var wrong = shuffle(others).slice(0, 3);
+    var choices = shuffle([m].concat(wrong)).map(function (k) { return { value: k + '/' + n, html: '<span>' + k + '/' + n + '</span>' }; });
+    return { visualHTML: fractionBarSVG(n, m, "#C23B56"), prompt: "What fraction of the bar is shaded?", type: "choice", choices: choices, answer: m + '/' + n,
+      hints: ["Count the total number of equal parts, then count how many are shaded.", "There are " + n + " equal parts and " + m + " shaded, so the fraction is " + m + "/" + n + "."],
+      explain: "The bar has " + n + " equal parts with " + m + " shaded, giving the fraction " + m + "/" + n + "." };
+  }
+  function genFractionCompare() {
+    var d = randInt(5, 10), a = randInt(1, d - 1), b;
+    do { b = randInt(1, d - 1); } while (b === a);
+    var bigger = a > b ? a : b;
+    var choices = [{ value: a + '/' + d, html: '<span>' + a + '/' + d + '</span>' }, { value: b + '/' + d, html: '<span>' + b + '/' + d + '</span>' }];
+    return { visualHTML: '', prompt: "Which fraction is greater: " + a + "/" + d + " or " + b + "/" + d + "?", type: "choice", choices: choices, answer: bigger + '/' + d,
+      hints: ["When two fractions share the same denominator, the one with the bigger numerator is bigger.", "Compare " + a + " and " + b + " — which is larger?"],
+      explain: "Since both fractions have the same denominator, " + bigger + "/" + d + " is greater because " + bigger + " is the bigger numerator." };
+  }
+  var TOOL_POOL = [
+    { q: "Which tool do you use to draw a perfect circle?", answer: "Compass", choices: ["Compass", "Ruler", "Protractor", "Eraser"], h1: "Think of the tool with a sharp point and a pencil leg that spins around.", h2: "A compass keeps one point fixed and swings the pencil around it.", explain: "A compass has a fixed point and a pencil arm that sweeps around it at a constant distance, drawing a perfect circle." },
+    { q: "Which tool do you use to measure the size of an angle?", answer: "Protractor", choices: ["Compass", "Ruler", "Protractor", "Set square"], h1: "It's shaped like a half-circle with degree marks.", h2: "A protractor has numbers from 0° to 180° along its curved edge.", explain: "A protractor's curved edge is marked in degrees, letting you read the exact size of an angle." },
+    { q: "Which tool is best for drawing a straight line between two points?", answer: "Ruler", choices: ["Compass", "Ruler", "Protractor", "Eraser"], h1: "It has a straight edge marked with centimetres.", h2: "A ruler's flat edge guides your pencil in a perfectly straight path.", explain: "A ruler gives a straight edge to guide your pencil, and its markings let you measure length too." },
+    { q: "Which two tools do you need to construct a triangle with equal sides?", answer: "Compass and ruler", choices: ["Compass and ruler", "Protractor and eraser", "Ruler and sharpener", "Compass and stapler"], h1: "You need something to mark off equal lengths AND something to draw straight lines.", h2: "The compass sets equal side lengths, and the ruler draws the straight lines.", explain: "The ruler draws the straight lines, while the compass marks off equal lengths for the sides." }
+  ];
+  function genToolFrom(indices) {
+    var item = pick(indices.map(function (i) { return TOOL_POOL[i]; }));
+    var choices = shuffle(item.choices).map(function (c) { return { value: c, html: '<span>' + c + '</span>' }; });
+    return { visualHTML: '', prompt: item.q, type: "choice", choices: choices, answer: item.answer, hints: [item.h1, item.h2], explain: item.explain };
+  }
+  function genSymmetryPolygon() {
+    var opts = [{ n: 3, name: 'equilateral triangle' }, { n: 4, name: 'square' }, { n: 5, name: 'regular pentagon' }, { n: 6, name: 'regular hexagon' }];
+    var o = pick(opts);
+    var wrongNums = shuffle([o.n + 1, o.n + 2, o.n - 1 < 3 ? o.n + 3 : o.n - 1]).slice(0, 3);
+    var choices = shuffle([o.n].concat(wrongNums)).map(function (v) { return { value: String(v), html: '<span>' + v + '</span>' }; });
+    return { visualHTML: polygonSVG(o.n, "#D9A22B"), prompt: "This is a regular " + o.name + ". How many lines of symmetry does it have?", type: "choice", choices: choices, answer: String(o.n),
+      hints: ["A line of symmetry splits a shape into two matching mirror-image halves.", "A regular polygon always has the same number of symmetry lines as it has sides — count them!"],
+      explain: "A regular polygon has as many lines of symmetry as it has sides. This shape has " + o.n + " equal sides, so it has " + o.n + " lines of symmetry." };
+  }
+  function genSymmetryLetter() {
+    var symLetters = ['A','H','M','T','U','V','W','X','Y','O'], asymLetters = ['F','G','J','L','N','P','Q','R','S','Z'];
+    var isSym = Math.random() < 0.5, letter = isSym ? pick(symLetters) : pick(asymLetters);
+    var choices = [{ value: 'Yes', html: '<span>Yes</span>' }, { value: 'No', html: '<span>No</span>' }];
+    return { visualHTML: '<div class="big-letter">' + letter + '</div>', prompt: "Does the letter '" + letter + "' have a vertical line of symmetry?", type: "choice", choices: choices, answer: isSym ? 'Yes' : 'No',
+      hints: ["Imagine folding the letter exactly in half along a line down the middle — do both sides match?", "Letters like A, H, M, T, U, V, W, X, Y and O all match perfectly when folded down the middle."],
+      explain: "If you fold '" + letter + "' down the middle, the two halves " + (isSym ? "match perfectly, so it does" : "don't match, so it does not") + " have a vertical line of symmetry." };
+  }
+  function genIntegerCompare() {
+    var a = randInt(-20, 20), b; do { b = randInt(-20, 20); } while (b === a);
+    var answer = Math.max(a, b);
+    var choices = [{ value: String(a), html: '<span>' + a + '</span>' }, { value: String(b), html: '<span>' + b + '</span>' }];
+    return { visualHTML: '', prompt: "Which is greater: " + a + " or " + b + "?", type: "choice", choices: choices, answer: String(answer),
+      hints: ["On a number line, numbers get bigger as you move to the right — even negative numbers.", "Between " + a + " and " + b + ", which sits further to the right?"],
+      explain: "On the number line, " + answer + " is to the right of " + (a === answer ? b : a) + ", so " + answer + " is greater." };
+  }
+  function genIntegerWord() {
+    var start = randInt(-10, 25), diff = randInt(3, 15), drop = Math.random() < 0.5;
+    var answer = drop ? start - diff : start + diff;
+    return { visualHTML: '', prompt: "The temperature was " + start + "°C in the morning. By evening it had " + (drop ? "dropped" : "risen") + " by " + diff + "°C. What was the evening temperature?", type: "number", answer: answer,
+      hints: ["A drop means subtract; a rise means add.", "Evening temperature = " + start + " " + (drop ? "−" : "+") + " " + diff + "."],
+      explain: "Starting at " + start + "°C and " + (drop ? "dropping" : "rising") + " by " + diff + "°C gives " + start + " " + (drop ? "−" : "+") + " " + diff + " = " + answer + "°C." };
+  }
+
+  var CH_GEN = [
+    [genPatternsSeq, genPatternsTriangle],
+    [genAngleType, genLineRelation],
+    [genDivBy3, genPalindrome],
+    [genBarChart, genMode],
+    [genPrimeCheck, genFactorPick],
+    [genPerimeter, genArea],
+    [genFractionShaded, genFractionCompare],
+    [function () { return genToolFrom([0, 1]); }, function () { return genToolFrom([2, 3]); }],
+    [genSymmetryPolygon, genSymmetryLetter],
+    [genIntegerCompare, genIntegerWord]
+  ];
+
+  // ---------------- state ----------------
+  var state = null, mainEl;
+
+  function freshChapter(idx) {
+    return { questions: [CH_GEN[idx][0](), CH_GEN[idx][1]()], answered: [false, false], hints: [0, 0], attempts: [0, 0], stars: [0, 0] };
+  }
+  function freshState() {
+    var chapters = [];
+    for (var i = 0; i < 10; i++) chapters.push(freshChapter(i));
+    return { chapters: chapters, view: "dashboard", currentChapter: 0, currentQuestion: 0 };
+  }
+  function saveState() {
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) { /* storage unavailable */ }
+  }
+  function loadState() {
+    try {
+      var raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return null;
+      var parsed = JSON.parse(raw);
+      if (parsed && parsed.chapters && parsed.chapters.length === 10) return parsed;
+      return null;
+    } catch (e) { return null; }
+  }
+
+  function initGame(forceFresh) {
+    state = (!forceFresh && loadState()) || freshState();
+    state.view = "dashboard";
+    saveState();
+    renderDashboard();
+  }
+
+  function starString(n) { var out = ''; for (var i = 0; i < 3; i++) out += (i < n) ? '★' : '☆'; return out; }
+  function computeStars(hintsUsed, attempts) {
+    var penalty = hintsUsed; if (attempts >= 1) penalty += 1; if (attempts >= 3) penalty += 1;
+    var s = 3 - penalty; if (s < 1) s = 1; if (s > 3) s = 3; return s;
+  }
+
+  function renderDashboard() {
+    var totalStars = 0, maxStars = 60, chaptersDone = 0;
+    state.chapters.forEach(function (c) {
+      totalStars += c.stars[0] + c.stars[1];
+      if (c.answered[0] && c.answered[1]) chaptersDone++;
+    });
+    var pct = Math.round((totalStars / maxStars) * 100);
+
+    var cardsHTML = CHAPTERS_META.map(function (meta, i) {
+      var c = state.chapters[i];
+      var done = c.answered[0] && c.answered[1];
+      var started = c.answered[0] || c.answered[1];
+      var stars = c.stars[0] + c.stars[1];
+      var status = done ? '<span class="status-tag completed">Completed</span>' : (started ? '<span class="status-tag progress">In progress</span>' : '<span class="status-tag">Not started</span>');
+      return '<button class="chapter-card" data-i="' + i + '">' +
+        '<div class="card-top"><span class="num-chip">' + (i + 1) + '</span><span class="emoji">' + meta.emoji + '</span></div>' +
+        '<h3>' + meta.title + '</h3>' +
+        '<div class="stars-mini">' + starString(stars > 3 ? 3 : stars) + (stars > 3 ? ' +' + (stars - 3) : '') + '</div>' +
+        status + '</button>';
+    }).join('');
+
+    mainEl.innerHTML =
+      '<section class="dash-header">' +
+      '<div class="stat-row"><span class="stat-big">' + totalStars + ' / ' + maxStars + ' stars</span>' +
+      '<span class="stat-sub">' + chaptersDone + ' / 10 chapters completed</span></div>' +
+      '<div class="progress-outer"><div class="progress-inner" style="width:' + pct + '%"></div></div>' +
+      '</section>' +
+      '<div class="dashboard-grid">' + cardsHTML + '</div>';
+
+    Array.prototype.forEach.call(mainEl.querySelectorAll('.chapter-card'), function (btn) {
+      btn.addEventListener('click', function () {
+        var i = Number(btn.getAttribute('data-i'));
+        var c = state.chapters[i];
+        if (c.answered[0] && c.answered[1]) { renderChapterComplete(i); }
+        else { enterChapter(i); }
+      });
+    });
+  }
+
+  function enterChapter(i) {
+    var c = state.chapters[i];
+    var qi = !c.answered[0] ? 0 : (!c.answered[1] ? 1 : 0);
+    state.currentChapter = i; state.currentQuestion = qi;
+    renderChapterQuestion(i, qi);
+  }
+
+  function miniDots(i, activeQ) {
+    var c = state.chapters[i];
+    return '<div class="mini-dots">' + [0, 1].map(function (q) {
+      var cls = c.answered[q] ? 'done' : (q === activeQ ? 'active' : '');
+      return '<span class="mini-dot ' + cls + '"></span>';
+    }).join('') + '</div>';
+  }
+
+  function renderChapterQuestion(i, qi) {
+    var c = state.chapters[i], q = c.questions[qi], meta = CHAPTERS_META[i];
+    var answerAreaHTML = '';
+    if (q.type === 'number') {
+      answerAreaHTML = '<div class="number-input-row"><input type="number" inputmode="numeric" id="numInput" aria-label="Your answer" placeholder="?">' +
+        '<button class="primary-btn" id="checkBtn">Check my answer</button></div>';
+    } else {
+      answerAreaHTML = '<div class="choice-grid">' + q.choices.map(function (c2, idx) {
+        return '<button class="choice-btn" data-idx="' + idx + '">' + c2.html + '</button>';
+      }).join('') + '</div>';
+    }
+
+    mainEl.innerHTML =
+      '<button class="back-link" id="backBtn">← Back to dashboard</button>' +
+      '<section class="station-card">' +
+      '<p class="kicker">Chapter ' + (i + 1) + ' of 10 · ' + meta.title + ' · Question ' + (qi + 1) + ' of 2</p>' +
+      '<h2>' + meta.emoji + ' ' + meta.title + '</h2>' +
+      miniDots(i, qi) +
+      (q.visualHTML ? '<div class="visual">' + q.visualHTML + '</div>' : '') +
+      '<p class="prompt">' + q.prompt + '</p>' +
+      '<div id="answerArea">' + answerAreaHTML + '</div>' +
+      '<div class="hint-row"><button class="ghost-btn" id="hintBtn">Get a clue (' + q.hints.length + ' left)</button>' +
+      '<div class="hint-box" id="hintBox" hidden></div></div>' +
+      '<div id="feedback"></div>' +
+      '<div class="nav-row"></div>' +
+      '</section>';
+
+    document.getElementById('backBtn').addEventListener('click', renderDashboard);
+
+    var hintsRevealed = c.hints[qi];
+    var hintBtn = document.getElementById('hintBtn'), hintBox = document.getElementById('hintBox');
+    if (hintsRevealed > 0) {
+      hintBox.hidden = false;
+      for (var h = 0; h < hintsRevealed; h++) { var p0 = document.createElement('p'); p0.textContent = '💡 ' + q.hints[h]; hintBox.appendChild(p0); }
+      var leftInit = q.hints.length - hintsRevealed;
+      hintBtn.textContent = leftInit > 0 ? 'Get another clue (' + leftInit + ' left)' : 'No more clues';
+      if (leftInit <= 0) hintBtn.disabled = true;
+    }
+    hintBtn.addEventListener('click', function () {
+      if (hintsRevealed >= q.hints.length) return;
+      hintBox.hidden = false;
+      var p = document.createElement('p'); p.textContent = '💡 ' + q.hints[hintsRevealed]; hintBox.appendChild(p);
+      hintsRevealed++; c.hints[qi] = hintsRevealed; saveState();
+      var left = q.hints.length - hintsRevealed;
+      hintBtn.textContent = left > 0 ? 'Get another clue (' + left + ' left)' : 'No more clues';
+      if (left <= 0) hintBtn.disabled = true;
+    });
+
+    function handleResult(isCorrect, chosenBtn) {
+      var fb = document.getElementById('feedback');
+      if (isCorrect) {
+        c.answered[qi] = true;
+        c.stars[qi] = computeStars(c.hints[qi], c.attempts[qi]);
+        saveState();
+        reportPractice(i, qi, c.stars[qi]);
+        fb.innerHTML = '<div class="feedback correct"><div class="fb-title">Nice work — that\'s it!</div>' +
+          '<div class="fb-explain">' + q.explain + '</div><div class="stars">' + starString(c.stars[qi]) + '</div></div>';
+        launchConfetti();
+        if (q.type === 'number') { document.getElementById('numInput').disabled = true; document.getElementById('checkBtn').disabled = true; }
+        else { Array.prototype.forEach.call(document.querySelectorAll('.choice-btn'), function (b) { b.disabled = true; }); if (chosenBtn) chosenBtn.classList.add('correct'); }
+        hintBtn.disabled = true;
+        var navRow = document.querySelector('.nav-row');
+        var bothDone = c.answered[0] && c.answered[1];
+        navRow.innerHTML = '<button class="primary-btn" id="nextBtn">' + (bothDone ? 'See chapter results →' : 'Next question →') + '</button>';
+        document.getElementById('nextBtn').addEventListener('click', function () {
+          if (bothDone) { renderChapterComplete(i); } else { renderChapterQuestion(i, qi === 0 ? 1 : 0); }
+        });
+      } else {
+        c.attempts[qi]++; saveState();
+        var encourage = c.attempts[qi] === 1 ? "Not quite — take another look." : "Still not it. Try a clue if you'd like one!";
+        fb.innerHTML = '<div class="feedback incorrect"><div class="fb-title">' + encourage + '</div></div>';
+        if (chosenBtn) { chosenBtn.classList.add('incorrect'); setTimeout(function () { chosenBtn.classList.remove('incorrect'); }, 900); }
+      }
+    }
+
+    if (q.type === 'number') {
+      document.getElementById('checkBtn').addEventListener('click', function () {
+        var val = document.getElementById('numInput').value.trim();
+        if (val === '') return;
+        handleResult(Number(val) === Number(q.answer), null);
+      });
+      document.getElementById('numInput').addEventListener('keydown', function (e) { if (e.key === 'Enter') document.getElementById('checkBtn').click(); });
+    } else {
+      Array.prototype.forEach.call(document.querySelectorAll('.choice-btn'), function (btn) {
+        btn.addEventListener('click', function () {
+          var idx = Number(btn.getAttribute('data-idx'));
+          handleResult(q.choices[idx].value === q.answer, btn);
+        });
+      });
+    }
+  }
+
+  function renderChapterComplete(i) {
+    var c = state.chapters[i], meta = CHAPTERS_META[i];
+    var totalStars = c.stars[0] + c.stars[1];
+    var recap = c.questions.map(function (q, qi) {
+      return '<div class="recap-item"><div class="q-prompt">' + q.prompt + '</div>' +
+        '<div>Answer: <strong>' + q.answer + '</strong></div>' +
+        '<div class="fb-explain">' + q.explain + '</div>' +
+        '<div class="stars">' + starString(c.stars[qi]) + '</div></div>';
+    }).join('');
+    var isLast = i === 9;
+    mainEl.innerHTML =
+      '<button class="back-link" id="backBtn">← Back to dashboard</button>' +
+      '<section class="summary-card">' +
+      '<p class="kicker">Chapter ' + (i + 1) + ' of 10 complete</p>' +
+      '<h2>' + meta.emoji + ' ' + meta.title + '</h2>' +
+      '<div class="summary-total">' + totalStars + ' / 6 stars</div>' +
+      recap +
+      '<div class="nav-row">' +
+      '<button class="ghost-btn" id="replayBtn">🔄 Replay this chapter</button>' +
+      (!isLast ? '<button class="primary-btn" id="nextChBtn">Next chapter →</button>' : '') +
+      '</div></section>';
+    document.getElementById('backBtn').addEventListener('click', renderDashboard);
+    document.getElementById('replayBtn').addEventListener('click', function () {
+      state.chapters[i] = freshChapter(i); saveState(); enterChapter(i);
+    });
+    if (!isLast) {
+      document.getElementById('nextChBtn').addEventListener('click', function () { enterChapter(i + 1); });
+    }
+  }
+
+  function launchConfetti() {
+    if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    var colors = ['#D9A22B', '#167A67', '#C23B56', '#3F6FB0'];
+    for (var k = 0; k < 16; k++) {
+      var piece = document.createElement('div');
+      piece.className = 'confetti-piece';
+      piece.style.left = (Math.random() * 100) + 'vw';
+      piece.style.background = colors[k % colors.length];
+      piece.style.animationDelay = (Math.random() * 150) + 'ms';
+      document.body.appendChild(piece);
+      (function (el) { setTimeout(function () { el.remove(); }, 1400); })(piece);
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', function () {
+    mainEl = document.getElementById('main');
+    document.getElementById('homeBtn').addEventListener('click', renderDashboard);
+    document.getElementById('resetBtn').addEventListener('click', function () {
+      if (window.confirm('Reset all progress across all 10 chapters? This cannot be undone.')) {
+        try { localStorage.removeItem(STORAGE_KEY); } catch (e) {}
+        initGame(true);
+      }
+    });
+    if (LP_TOKEN && LP_ROLE) {
+      var actions = document.querySelector('.topbar-actions');
+      var back = document.createElement('a');
+      back.className = 'ghost-btn'; back.textContent = '← My portal'; back.style.textDecoration = 'none';
+      back.href = LP_ROLE === 'student' ? '/student.html' : (LP_ROLE === 'parent' ? '/parent.html' : '/teacher.html');
+      actions.insertBefore(back, actions.firstChild);
+    }
+    initGame(false);
+    var m = /[?&]chapter=(\d+)/.exec(location.search);
+    if (m) {
+      var ci = Number(m[1]) - 1;
+      if (ci >= 0 && ci < 10) {
+        var cc = state.chapters[ci];
+        if (cc.answered[0] && cc.answered[1]) renderChapterComplete(ci); else enterChapter(ci);
+      }
+    }
+  });
+})();
+</script>
+</body>
+</html>

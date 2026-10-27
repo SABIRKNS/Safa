@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Parent view — Class VI Portal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/portal.css">
+</head>
+<body>
+<div class="wrap">
+  <header class="topbar">
+    <div class="brand"><span class="mark">👪</span><h1>Parent view<small>Follow your child's progress</small></h1></div>
+    <div class="who" id="who"></div>
+  </header>
+  <main id="app"><div class="empty">Loading…</div></main>
+</div>
+
+<script src="/js/portal.js"></script>
+<script>
+(async function () {
+  var app = document.getElementById("app");
+  var courses, cmap, children, current = 0, open = {};
+
+  async function load() {
+    var res = await Promise.all([P.api("/courses"), P.api("/parent/children")]);
+    courses = res[0].courses; cmap = P.courseMap(courses); children = res[1].children;
+    if (current >= children.length) current = 0;
+  }
+
+  try { await P.requireRole("parent"); await load(); }
+  catch (e) { if (e.message !== "redirect") app.innerHTML = "<div class='error'>" + P.esc(e.message) + "</div>"; return; }
+
+  function courseHTML(c, child) {
+    var s = child.summary.courses[c.id], pc = P.pct(s.done, s.total);
+    var rows = c.chapters.map(function (title, i) {
+      var n = i + 1, rec = child.progress.chapters[c.id + ":" + n], st = rec ? rec.status : "not_started";
+      var pr = "";
+      if (c.practice) {
+        var p = child.progress.practice["maths:" + n];
+        var stars = p ? (p.stars[0] || 0) + (p.stars[1] || 0) : 0;
+        pr = "<span class='stars' title='Practice stars'>" + (stars ? P.starString(stars, 6) : "") + "</span>";
+      } else pr = "<span></span>";
+      return "<li><span class='ch-num'>" + n + "</span><span class='ch-title'>" + P.esc(title) + "</span>" + pr +
+        "<span class='pill " + st + "'>" + P.STATUS_LABEL[st] + "</span></li>";
+    }).join("");
+    var key = child.student.username + ":" + c.id;
+    return "<details class='course' data-key='" + key + "'" + (open[key] ? " open" : "") + ">" +
+      "<summary><span class='emoji'>" + c.emoji + "</span><span class='c-title'>" + P.esc(c.title) + "</span>" +
+      "<span class='c-count'>" + s.done + " / " + s.total + "</span><span class='c-book'>" + P.esc(c.book) + "</span>" +
+      "<span class='c-bar bar teal'><i style='width:" + pc + "%'></i></span></summary>" +
+      "<ul class='chapters'>" + rows + "</ul></details>";
+  }
+
+  function render() {
+    var linkForm =
+      "<h2 class='section-title'>Link another child</h2>" +
+      "<div class='card'><form id='linkForm' style='display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end'>" +
+      "<div style='flex:1 1 200px'><label for='lcode' style='margin-top:0'>Parent code</label>" +
+      "<input id='lcode' maxlength='10' autocapitalize='characters' placeholder='e.g. K7M2QX'></div>" +
+      "<button class='btn' type='submit'>Link</button></form><div class='error' id='linkErr' hidden></div></div>";
+
+    if (!children.length) { app.innerHTML = "<div class='card empty'>No children linked yet.</div>" + linkForm; wireLink(); return; }
+
+    var tabs = children.length > 1
+      ? "<div class='tabs'>" + children.map(function (c, i) {
+          return "<button class='tab' data-i='" + i + "' aria-selected='" + (i === current) + "'>" + P.esc(c.student.name) + "</button>";
+        }).join("") + "</div>"
+      : "";
+    var child = children[current], sm = child.summary;
+
+    app.innerHTML = tabs +
+      "<div class='card' style='margin-bottom:14px'><h2 style='font-size:22px'>" + P.esc(child.student.name) + "</h2>" +
+      "<div class='muted'>" + (child.student.section ? "Section " + P.esc(child.student.section) + " · " : "") + "Last active: " + P.timeAgo(sm.lastActive) + "</div></div>" +
+      "<section class='stats'>" +
+      "<div class='stat'><div class='num'>" + sm.pct + "%</div><div class='lbl'>of all chapters finished</div></div>" +
+      "<div class='stat'><div class='num'>" + sm.done + " / " + sm.total + "</div><div class='lbl'>chapters done</div></div>" +
+      "<div class='stat'><div class='num'>" + sm.practiceStars + " / " + sm.practiceMax + " ★</div><div class='lbl'>Maths practice stars</div></div>" +
+      "</section>" +
+      "<h2 class='section-title'>Courses</h2>" + courses.map(function (c) { return courseHTML(c, child); }).join("") +
+      "<h2 class='section-title'>Notes from the teacher</h2><div class='card'>" + P.notesHTML(child.progress.notes) + "</div>" +
+      "<h2 class='section-title'>Recent activity</h2><div class='card'>" + P.activityHTML(child.progress.activity, cmap) + "</div>" +
+      linkForm;
+
+    Array.prototype.forEach.call(app.querySelectorAll(".tab[data-i]"), function (b) {
+      b.onclick = function () { current = Number(b.getAttribute("data-i")); render(); };
+    });
+    Array.prototype.forEach.call(app.querySelectorAll("details.course"), function (d) {
+      d.addEventListener("toggle", function () { open[d.getAttribute("data-key")] = d.open; });
+    });
+    wireLink();
+  }
+
+  function wireLink() {
+    var f = document.getElementById("linkForm");
+    if (!f) return;
+    f.onsubmit = async function (ev) {
+      ev.preventDefault();
+      var err = document.getElementById("linkErr"); err.hidden = true;
+      try {
+        await P.api("/parent/link", { body: { code: document.getElementById("lcode").value } });
+        await load(); current = children.length - 1; render(); P.toast("Child linked");
+      } catch (e) { err.textContent = e.message; err.hidden = false; }
+    };
+  }
+  render();
+})();
+</script>
+</body>
+</html>

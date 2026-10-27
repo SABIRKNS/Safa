@@ -1,0 +1,898 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pattern Explorer's Field Journal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #FBF5E9;
+    --paper-dot: rgba(33,48,74,0.10);
+    --ink: #21304A;
+    --ink-soft: #5A6580;
+    --card: #FFFFFF;
+    --card-border: #E4D9BF;
+    --gold: #D9A22B;
+    --gold-ink: #55400A;
+    --teal: #167A67;
+    --teal-tint: #E3F3EE;
+    --raspberry: #C23B56;
+    --raspberry-tint: #FBEAEE;
+    --sky: #3F6FB0;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper: #171B26;
+      --paper-dot: rgba(241,236,221,0.08);
+      --ink: #F1ECDD;
+      --ink-soft: #B9BFCF;
+      --card: #212636;
+      --card-border: #333B52;
+      --gold: #E7B84B;
+      --gold-ink: #2A2109;
+      --teal: #2FBF9E;
+      --teal-tint: #16302B;
+      --raspberry: #E06481;
+      --raspberry-tint: #35202A;
+      --sky: #6C9BE0;
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper: #171B26;
+    --paper-dot: rgba(241,236,221,0.08);
+    --ink: #F1ECDD;
+    --ink-soft: #B9BFCF;
+    --card: #212636;
+    --card-border: #333B52;
+    --gold: #E7B84B;
+    --gold-ink: #2A2109;
+    --teal: #2FBF9E;
+    --teal-tint: #16302B;
+    --raspberry: #E06481;
+    --raspberry-tint: #35202A;
+    --sky: #6C9BE0;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    background-color: var(--paper);
+    background-image: radial-gradient(var(--paper-dot) 1.4px, transparent 1.4px);
+    background-size: 22px 22px;
+    color: var(--ink);
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    line-height: 1.55;
+  }
+
+  h1, h2, .kicker-title {
+    font-family: 'Fraunces', Georgia, serif;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    margin: 0;
+  }
+
+  .app {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 28px 20px 60px;
+  }
+
+  .topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 22px;
+  }
+  .brand { display: flex; align-items: center; gap: 12px; }
+  .brand-mark {
+    font-size: 30px;
+    display: inline-block;
+    transform: rotate(-8deg);
+  }
+  .brand h1 { font-size: 21px; line-height: 1.15; }
+
+  .ghost-btn {
+    font-family: 'Inter', sans-serif;
+    font-size: 13.5px;
+    font-weight: 600;
+    color: var(--ink-soft);
+    background: transparent;
+    border: 1.5px solid var(--card-border);
+    border-radius: 8px;
+    padding: 8px 13px;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .ghost-btn:hover { border-color: var(--ink-soft); color: var(--ink); }
+  .ghost-btn:focus-visible, .primary-btn:focus-visible, .choice-btn:focus-visible, .trail-node:focus-visible {
+    outline: 3px solid var(--sky);
+    outline-offset: 2px;
+  }
+
+  .primary-btn {
+    font-family: 'Inter', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--gold-ink);
+    background: var(--gold);
+    border: none;
+    border-radius: 8px;
+    padding: 12px 22px;
+    cursor: pointer;
+    box-shadow: 0 3px 0 rgba(0,0,0,0.15);
+    transform: rotate(-0.4deg);
+    transition: transform 0.12s ease;
+  }
+  .primary-btn:hover { transform: rotate(-0.4deg) translateY(-1px); }
+  .primary-btn:active { transform: rotate(-0.4deg) translateY(1px); box-shadow: 0 1px 0 rgba(0,0,0,0.15); }
+  .primary-btn:disabled { opacity: 0.5; cursor: default; }
+
+  /* trail */
+  .trail {
+    position: relative;
+    display: flex;
+    justify-content: space-between;
+    gap: 4px;
+    margin: 6px 4px 26px;
+    padding-top: 4px;
+  }
+  .trail::before {
+    content: "";
+    position: absolute;
+    top: 22px;
+    left: 22px;
+    right: 22px;
+    height: 2px;
+    background: repeating-linear-gradient(to right, var(--card-border) 0 6px, transparent 6px 11px);
+    z-index: 0;
+  }
+  .trail-node {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+    color: var(--ink-soft);
+    padding: 0;
+    flex: 1;
+  }
+  .trail-node .circle {
+    width: 42px; height: 42px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+    background: var(--card);
+    border: 2px solid var(--card-border);
+  }
+  .trail-node.done .circle { background: var(--teal-tint); border-color: var(--teal); }
+  .trail-node.current .circle { border-color: var(--gold); box-shadow: 0 0 0 4px rgba(217,162,43,0.25); }
+  .trail-node.locked { cursor: default; opacity: 0.45; }
+  .trail-node .label { font-size: 10.5px; font-weight: 600; text-align: center; max-width: 64px; }
+
+  /* cards */
+  .intro-card, .station-card, .summary-card {
+    background: var(--card);
+    border: 1.5px solid var(--card-border);
+    border-radius: 10px;
+    padding: 26px 24px 24px;
+    box-shadow: 0 10px 26px rgba(33,48,74,0.08);
+    transform: rotate(0.2deg);
+  }
+  .kicker {
+    font-size: 12.5px;
+    font-weight: 700;
+    color: var(--sky);
+    margin: 0 0 6px;
+  }
+  .intro-card h2, .station-card h2, .summary-card h2 { font-size: 24px; margin-bottom: 10px; }
+  .intro-card p, .station-card .prompt, .summary-card p {
+    max-width: 62ch;
+    color: var(--ink-soft);
+    font-size: 15.5px;
+  }
+  .station-card .prompt { color: var(--ink); font-weight: 500; margin-top: 4px; }
+
+  .visual { margin: 16px 0 6px; }
+
+  /* number sequence boxes */
+  .seq-row { display: flex; flex-wrap: wrap; gap: 8px; }
+  .num-box {
+    min-width: 46px; height: 46px;
+    display: flex; align-items: center; justify-content: center;
+    border: 2px solid var(--sky);
+    border-radius: 8px;
+    font-weight: 700; font-size: 17px;
+    background: rgba(63,111,176,0.06);
+  }
+  .num-box.blank { border-style: dashed; border-color: var(--gold); background: rgba(217,162,43,0.12); color: var(--gold-ink); }
+
+  /* shape icons */
+  .shape-row { display: flex; flex-wrap: wrap; align-items: center; gap: 14px; }
+  .shape-icon { width: 34px; height: 34px; display: inline-block; }
+  .shape-circle { border-radius: 50%; background: var(--teal); }
+  .shape-square { background: var(--gold); border-radius: 4px; }
+  .shape-triangle { background: var(--raspberry); clip-path: polygon(50% 0%, 0% 100%, 100% 100%); }
+  .shape-star { background: var(--sky); clip-path: polygon(50% 0%,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%); }
+  .shape-diamond { background: var(--ink-soft); transform: rotate(45deg); border-radius: 3px; }
+  .blank-slot {
+    width: 34px; height: 34px; border-radius: 6px;
+    border: 2px dashed var(--gold);
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; color: var(--gold-ink); font-size: 15px;
+  }
+
+  /* triangle towers */
+  .reference-row { display: flex; flex-wrap: wrap; gap: 22px; margin-bottom: 6px; }
+  .tower { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+  .tower-dots { display: flex; flex-direction: column; gap: 4px; align-items: center; }
+  .dot-row { display: flex; gap: 4px; }
+  .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--raspberry); }
+  .tower-label { font-size: 12px; color: var(--ink-soft); font-weight: 600; }
+
+  /* square garden grids */
+  .garden { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+  .grid { display: grid; gap: 2px; width: 70px; }
+  .cell { aspect-ratio: 1; background: var(--teal); border-radius: 2px; }
+
+  /* polygon */
+  .poly-svg { width: 96px; height: 96px; }
+
+  /* choices */
+  .choice-grid { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 6px; }
+  .choice-btn {
+    font-family: 'Inter', sans-serif;
+    font-size: 14.5px; font-weight: 600;
+    background: var(--card);
+    border: 2px solid var(--card-border);
+    border-radius: 9px;
+    padding: 10px 16px;
+    display: flex; align-items: center; gap: 10px;
+    cursor: pointer;
+    color: var(--ink);
+  }
+  .choice-btn:hover { border-color: var(--sky); }
+  .choice-btn:disabled { cursor: default; }
+  .choice-btn.correct { border-color: var(--teal); background: var(--teal-tint); }
+  .choice-btn.incorrect { border-color: var(--raspberry); background: var(--raspberry-tint); }
+
+  /* number input */
+  .number-input-row { display: flex; gap: 10px; margin-top: 10px; flex-wrap: wrap; }
+  .number-input-row input {
+    font-family: 'Inter', sans-serif;
+    font-size: 17px; font-weight: 600;
+    width: 110px;
+    padding: 10px 12px;
+    border: 2px solid var(--card-border);
+    border-radius: 8px;
+    background: var(--paper);
+    color: var(--ink);
+  }
+  .number-input-row input:focus { border-color: var(--sky); outline: none; }
+
+  /* hints */
+  .hint-row { margin-top: 18px; }
+  .hint-box {
+    margin-top: 10px;
+    background: rgba(217,162,43,0.12);
+    border-left: 3px solid var(--gold);
+    padding: 10px 14px;
+    border-radius: 6px;
+    font-size: 14px;
+  }
+  .hint-box p { margin: 4px 0; }
+
+  /* feedback */
+  .feedback {
+    margin-top: 16px;
+    padding: 14px 16px;
+    border-radius: 8px;
+    font-size: 14.5px;
+  }
+  .feedback.correct { background: var(--teal-tint); border: 1.5px solid var(--teal); }
+  .feedback.incorrect { background: var(--raspberry-tint); border: 1.5px solid var(--raspberry); }
+  .feedback .fb-title { font-weight: 700; margin-bottom: 4px; font-size: 15px; }
+  .feedback.correct .fb-title { color: var(--teal); }
+  .feedback.incorrect .fb-title { color: var(--raspberry); }
+  .feedback .fb-explain { color: var(--ink-soft); margin-top: 6px; }
+  .stars { font-size: 17px; letter-spacing: 2px; margin-top: 4px; }
+
+  .nav-row { margin-top: 20px; display: flex; gap: 10px; flex-wrap: wrap; }
+
+  .solved-banner {
+    display: inline-block;
+    background: var(--teal-tint);
+    color: var(--teal);
+    font-weight: 700;
+    font-size: 12.5px;
+    padding: 5px 10px;
+    border-radius: 999px;
+    margin-bottom: 10px;
+  }
+
+  /* summary */
+  .summary-list { list-style: none; padding: 0; margin: 18px 0; display: flex; flex-direction: column; gap: 8px; }
+  .summary-list li {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 14px; border: 1.5px solid var(--card-border); border-radius: 8px;
+    font-size: 14.5px; font-weight: 600;
+  }
+  .summary-total {
+    margin-top: 14px; font-size: 20px; font-weight: 700;
+  }
+  .tier-msg { color: var(--ink-soft); margin-top: 4px; }
+
+  .foot { text-align: center; margin-top: 34px; }
+  .foot p { font-size: 12.5px; color: var(--ink-soft); }
+
+  /* confetti */
+  .confetti-piece {
+    position: fixed;
+    top: -10px;
+    width: 8px; height: 8px;
+    border-radius: 2px;
+    pointer-events: none;
+    z-index: 50;
+    animation: fall 1100ms ease-in forwards;
+  }
+  @keyframes fall {
+    to { transform: translateY(70vh) rotate(300deg); opacity: 0; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .confetti-piece { display: none; }
+    .primary-btn, .primary-btn:hover, .primary-btn:active { transform: none; }
+  }
+
+  @media (max-width: 480px) {
+    .app { padding: 18px 14px 40px; }
+    .trail-node .label { display: none; }
+    .brand h1 { font-size: 18px; }
+    .intro-card, .station-card, .summary-card { padding: 20px 16px; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-mark">🧭</span>
+      <h1>Pattern Explorer's<br>Field Journal</h1>
+    </div>
+    <button class="ghost-btn" id="restartBtn">Start over</button>
+  </header>
+
+  <nav class="trail" id="trail" aria-label="Your progress"></nav>
+
+  <main id="main"></main>
+
+  <footer class="foot">
+    <p>Original practice activities for spotting number &amp; shape patterns — not reproduced from any textbook.</p>
+  </footer>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  var STATIONS = [
+    { title: "Number Detective", emoji: "🔎" },
+    { title: "Shape Train", emoji: "🚂" },
+    { title: "Triangular Towers", emoji: "🔺" },
+    { title: "Square Gardens", emoji: "🌷" },
+    { title: "The Growing Rabbit Sequence", emoji: "🐇" },
+    { title: "Polygon Spotter", emoji: "🧩" }
+  ];
+
+  var NUMBER_POOL = [
+    {
+      seq: [2, 5, 8, 11, null, 17], answer: 14,
+      hints: [
+        "Compare each number to the one right before it — what changes every time?",
+        "Every number is 3 more than the one before it: 2 → 5 → 8 → 11 → ? → 17."
+      ],
+      explain: "This is an arithmetic pattern with a common difference of 3, so the missing number is 11 + 3 = 14."
+    },
+    {
+      seq: [50, 45, 40, null, 30, 25], answer: 35,
+      hints: [
+        "This sequence is going down, not up. By how much each time?",
+        "Each number is 5 less than the one before it."
+      ],
+      explain: "Each term decreases by 5, so after 40 comes 40 − 5 = 35."
+    },
+    {
+      seq: [1, 2, 4, 8, null, 32], answer: 16,
+      hints: [
+        "Try an operation other than adding the same number each time.",
+        "Each number is double the one before it."
+      ],
+      explain: "Each term is multiplied by 2 — this is a doubling pattern: 1, 2, 4, 8, 16, 32."
+    },
+    {
+      seq: [3, 6, 9, null, 15, 18], answer: 12,
+      hints: [
+        "This one follows a very familiar times table.",
+        "Every number is 3 more than the last — the 3 times table!"
+      ],
+      explain: "These are multiples of 3: 3, 6, 9, 12, 15, 18."
+    }
+  ];
+
+  var SHAPE_NAMES = ["circle", "square", "triangle", "star", "diamond"];
+  var SHAPE_POOL = [
+    {
+      seq: ["circle", "square", "circle", "square", "circle"], next: "square",
+      hints: [
+        "Only two shapes are taking turns here.",
+        "Circle, square, circle, square... which one comes after circle?"
+      ],
+      explain: "The pattern alternates between two shapes, circle and square. After circle comes square again."
+    },
+    {
+      seq: ["triangle", "triangle", "circle", "triangle", "triangle"], next: "circle",
+      hints: [
+        "Count how many shapes appear before the pattern starts over.",
+        "The group is: triangle, triangle, circle — then it repeats."
+      ],
+      explain: "The repeating block is triangle, triangle, circle. After two triangles comes a circle."
+    },
+    {
+      seq: ["star", "circle", "circle", "star", "circle"], next: "circle",
+      hints: [
+        "Look for a repeating group of three shapes.",
+        "The group is: star, circle, circle — then it starts again."
+      ],
+      explain: "The repeating block is star, circle, circle. After star comes circle."
+    }
+  ];
+
+  var POLY_NAMES = { 3: "Triangle", 4: "Square", 5: "Pentagon", 6: "Hexagon", 8: "Octagon" };
+
+  function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+  function randInt(a, b) { return a + Math.floor(Math.random() * (b - a + 1)); }
+  function shuffle(arr) {
+    var a = arr.slice();
+    for (var i = a.length - 1; i > 0; i--) {
+      var j = Math.floor(Math.random() * (i + 1));
+      var t = a[i]; a[i] = a[j]; a[j] = t;
+    }
+    return a;
+  }
+
+  function seqBoxesHTML(seq) {
+    return '<div class="seq-row">' + seq.map(function (v) {
+      return v === null ? '<div class="num-box blank">?</div>' : '<div class="num-box">' + v + '</div>';
+    }).join('') + '</div>';
+  }
+
+  function shapeIconHTML(name) {
+    return '<span class="shape-icon shape-' + name + '"></span>';
+  }
+
+  function shapeRowHTML(seq) {
+    return '<div class="shape-row">' + seq.map(shapeIconHTML).join('') +
+      '<span class="blank-slot">?</span></div>';
+  }
+
+  function dotTriangleHTML(rows, label) {
+    var rowsHtml = '';
+    for (var r = 1; r <= rows; r++) {
+      var dots = '';
+      for (var d = 0; d < r; d++) { dots += '<span class="dot"></span>'; }
+      rowsHtml += '<div class="dot-row">' + dots + '</div>';
+    }
+    return '<div class="tower"><div class="tower-dots">' + rowsHtml + '</div>' +
+      '<div class="tower-label">' + label + '</div></div>';
+  }
+
+  function squareGridHTML(n, label) {
+    var cells = '';
+    for (var i = 0; i < n * n; i++) { cells += '<span class="cell"></span>'; }
+    return '<div class="garden"><div class="grid" style="grid-template-columns:repeat(' + n + ',1fr)">' +
+      cells + '</div><div class="tower-label">' + label + '</div></div>';
+  }
+
+  function polygonSVG(n, color) {
+    var cx = 60, cy = 60, r = 46, pts = [];
+    for (var i = 0; i < n; i++) {
+      var angle = (Math.PI * 2 * i) / n - Math.PI / 2;
+      var x = cx + r * Math.cos(angle);
+      var y = cy + r * Math.sin(angle);
+      pts.push(x.toFixed(1) + ',' + y.toFixed(1));
+    }
+    return '<svg viewBox="0 0 120 120" class="poly-svg" aria-hidden="true">' +
+      '<polygon points="' + pts.join(' ') + '" fill="' + color + '" fill-opacity="0.18" stroke="' + color + '" stroke-width="4" stroke-linejoin="round"/></svg>';
+  }
+
+  function generateQuestion(stationIndex) {
+    if (stationIndex === 0) {
+      var q = pick(NUMBER_POOL);
+      return {
+        visualHTML: seqBoxesHTML(q.seq),
+        prompt: "Figure out the rule behind this row of numbers, then type the missing one.",
+        type: "number",
+        answer: q.answer,
+        hints: q.hints,
+        explain: q.explain
+      };
+    }
+    if (stationIndex === 1) {
+      var s = pick(SHAPE_POOL);
+      var wrongChoices = shuffle(SHAPE_NAMES.filter(function (n) { return n !== s.next; })).slice(0, 3);
+      var choices = shuffle([s.next].concat(wrongChoices)).map(function (name) {
+        return { value: name, html: shapeIconHTML(name) + '<span>' + name + '</span>' };
+      });
+      return {
+        visualHTML: shapeRowHTML(s.seq),
+        prompt: "Which shape comes next in the train?",
+        type: "choice",
+        choices: choices,
+        answer: s.next,
+        hints: s.hints,
+        explain: s.explain
+      };
+    }
+    if (stationIndex === 2) {
+      var n = randInt(4, 7);
+      var answer = (n * (n + 1)) / 2;
+      var prevTotal = ((n - 1) * n) / 2;
+      var ref = '<div class="reference-row">' +
+        dotTriangleHTML(1, "Tower 1 = 1 dot") +
+        dotTriangleHTML(2, "Tower 2 = 3 dots") +
+        dotTriangleHTML(3, "Tower 3 = 6 dots") +
+        '</div>';
+      return {
+        visualHTML: ref,
+        prompt: "If the pattern keeps going, how many dots in total would Tower " + n + " have?",
+        type: "number",
+        answer: answer,
+        hints: [
+          "Each new tower adds one more row than the tower before it — how many dots would be in row " + n + " alone?",
+          "Tower " + (n - 1) + " has " + prevTotal + " dots. Add a new row of " + n + " dots to get Tower " + n + "."
+        ],
+        explain: "Triangular numbers grow by one extra row each time: 1, 3, 6, 10, 15, 21, 28 ... Tower " + n +
+          " = 1 + 2 + ... + " + n + " = " + answer + " dots."
+      };
+    }
+    if (stationIndex === 3) {
+      var n2 = randInt(6, 9);
+      var answer2 = n2 * n2;
+      var ref2 = '<div class="reference-row">' +
+        squareGridHTML(2, "2×2 = 4") +
+        squareGridHTML(3, "3×3 = 9") +
+        squareGridHTML(4, "4×4 = 16") +
+        '</div>';
+      return {
+        visualHTML: ref2,
+        prompt: "Following the pattern, how many flowers would be planted in a " + n2 + "×" + n2 + " garden?",
+        type: "number",
+        answer: answer2,
+        hints: [
+          "A square garden with side " + n2 + " has " + n2 + " rows — how many flowers sit in each row?",
+          "Multiply " + n2 + " by itself: " + n2 + " × " + n2 + "."
+        ],
+        explain: "Square numbers come from multiplying a number by itself. A " + n2 + "×" + n2 + " garden has " +
+          n2 + " × " + n2 + " = " + answer2 + " flowers."
+      };
+    }
+    if (stationIndex === 4) {
+      var base = [1, 1, 2, 3, 5, 8, 13, 21, 34];
+      var hiddenIdx = pick([5, 6, 7]);
+      var display = base.slice(0, hiddenIdx + 2).map(function (v, i) { return i === hiddenIdx ? null : v; });
+      var answer3 = base[hiddenIdx];
+      return {
+        visualHTML: seqBoxesHTML(display),
+        prompt: "This pattern was described long ago by the Indian mathematician Virahanka. Can you find the missing number?",
+        type: "number",
+        answer: answer3,
+        hints: [
+          "Look closely at the two numbers right before the missing one.",
+          "Each number is the sum of the two numbers before it: " + base[hiddenIdx - 2] + " + " + base[hiddenIdx - 1] + " = ?"
+        ],
+        explain: "Each term equals the sum of the previous two terms. The missing number is " +
+          base[hiddenIdx - 2] + " + " + base[hiddenIdx - 1] + " = " + answer3 +
+          ". You can spot this same growth pattern in sunflower spirals, pinecones and snail shells!"
+      };
+    }
+    // stationIndex === 5
+    var sidesOptions = [3, 4, 5, 6, 8];
+    var sides = pick(sidesOptions);
+    var correctName = POLY_NAMES[sides];
+    var wrongNames = shuffle(Object.keys(POLY_NAMES).filter(function (k) { return Number(k) !== sides; }))
+      .slice(0, 3).map(function (k) { return POLY_NAMES[k]; });
+    var choices2 = shuffle([correctName].concat(wrongNames)).map(function (name) {
+      return { value: name, html: '<span>' + name + '</span>' };
+    });
+    return {
+      visualHTML: polygonSVG(sides, "#3F6FB0"),
+      prompt: "All its sides and angles are equal. What is this shape called?",
+      type: "choice",
+      choices: choices2,
+      answer: correctName,
+      hints: [
+        "Count the sides carefully — there are " + sides + " of them.",
+        "A shape with " + sides + " equal sides is called a " + correctName + "."
+      ],
+      explain: "This is a regular " + correctName + " — it has " + sides + " equal sides and " + sides + " equal angles."
+    };
+  }
+
+  // ---------------- state ----------------
+  var state = {};
+
+  function freshState() {
+    return {
+      view: 0,
+      questions: [],
+      answered: [false, false, false, false, false, false],
+      hintsUsed: [0, 0, 0, 0, 0, 0],
+      attempts: [0, 0, 0, 0, 0, 0],
+      stars: [0, 0, 0, 0, 0, 0]
+    };
+  }
+
+  function activeIndex() {
+    for (var i = 0; i < 6; i++) { if (!state.answered[i]) return i; }
+    return 6;
+  }
+
+  var mainEl, trailEl;
+
+  function initGame() {
+    state = freshState();
+    for (var i = 0; i < 6; i++) { state.questions[i] = generateQuestion(i); }
+    renderTrail();
+    renderIntro();
+  }
+
+  function startExploring() {
+    state.view = 0;
+    renderTrail();
+    renderStation(0);
+  }
+
+  function renderTrail() {
+    var active = activeIndex();
+    trailEl.innerHTML = STATIONS.map(function (s, i) {
+      var status = state.answered[i] ? "done" : (i === active ? "current" : "");
+      var locked = (i > active) ? "locked" : "";
+      var icon = state.answered[i] ? "✓" : s.emoji;
+      return '<button class="trail-node ' + status + ' ' + locked + '" data-i="' + i + '" ' +
+        (i > active ? 'aria-disabled="true"' : '') + '>' +
+        '<span class="circle">' + icon + '</span>' +
+        '<span class="label">' + s.title + '</span></button>';
+    }).join('');
+    Array.prototype.forEach.call(trailEl.querySelectorAll('.trail-node'), function (btn) {
+      btn.addEventListener('click', function () {
+        var i = Number(btn.getAttribute('data-i'));
+        if (i > activeIndex()) return;
+        state.view = i;
+        renderStation(i);
+      });
+    });
+  }
+
+  function renderIntro() {
+    mainEl.innerHTML =
+      '<section class="intro-card">' +
+      '<p class="kicker">6 stops · about 10 minutes</p>' +
+      '<h2>Ready to hunt for patterns?</h2>' +
+      '<p>Numbers, shapes and towers of dots are hiding six little mysteries around this journal. ' +
+      'Solve each one, ask for a clue if you get stuck, and see how many stars you collect along the way.</p>' +
+      '<button class="primary-btn" id="startBtn">Start exploring</button>' +
+      '</section>';
+    document.getElementById('startBtn').addEventListener('click', startExploring);
+  }
+
+  function starString(n) {
+    var out = '';
+    for (var i = 0; i < 3; i++) { out += (i < n) ? '★' : '☆'; }
+    return out;
+  }
+
+  function computeStars(i) {
+    var penalty = state.hintsUsed[i];
+    if (state.attempts[i] >= 1) penalty += 1;
+    if (state.attempts[i] >= 3) penalty += 1;
+    var stars = 3 - penalty;
+    if (stars < 1) stars = 1;
+    if (stars > 3) stars = 3;
+    return stars;
+  }
+
+  function renderStation(i) {
+    var q = state.questions[i];
+    var meta = STATIONS[i];
+
+    if (state.answered[i]) {
+      mainEl.innerHTML =
+        '<section class="station-card">' +
+        '<span class="solved-banner">Solved</span>' +
+        '<p class="kicker">Stop ' + (i + 1) + ' of 6 · ' + meta.title + '</p>' +
+        '<h2>' + meta.emoji + ' ' + meta.title + '</h2>' +
+        '<div class="visual">' + q.visualHTML + '</div>' +
+        '<p class="prompt">' + q.prompt + '</p>' +
+        '<div class="feedback correct">' +
+        '<div class="fb-title">Correct answer: ' + q.answer + '</div>' +
+        '<div class="fb-explain">' + q.explain + '</div>' +
+        '<div class="stars">' + starString(state.stars[i]) + '</div>' +
+        '</div>' +
+        '<div class="nav-row"><button class="primary-btn" id="continueBtn">' +
+        (activeIndex() < 6 ? 'Continue journey →' : 'Go to my Field Journal →') +
+        '</button></div>' +
+        '</section>';
+      document.getElementById('continueBtn').addEventListener('click', function () {
+        var a = activeIndex();
+        if (a < 6) { state.view = a; renderStation(a); } else { renderSummary(); }
+      });
+      return;
+    }
+
+    var answerAreaHTML = '';
+    if (q.type === 'number') {
+      answerAreaHTML =
+        '<div class="number-input-row">' +
+        '<input type="number" inputmode="numeric" id="numInput" aria-label="Your answer" placeholder="?">' +
+        '<button class="primary-btn" id="checkBtn">Check my answer</button>' +
+        '</div>';
+    } else {
+      answerAreaHTML = '<div class="choice-grid">' + q.choices.map(function (c, idx) {
+        return '<button class="choice-btn" data-idx="' + idx + '">' + c.html + '</button>';
+      }).join('') + '</div>';
+    }
+
+    mainEl.innerHTML =
+      '<section class="station-card">' +
+      '<p class="kicker">Stop ' + (i + 1) + ' of 6 · ' + meta.title + '</p>' +
+      '<h2>' + meta.emoji + ' ' + meta.title + '</h2>' +
+      '<div class="visual">' + q.visualHTML + '</div>' +
+      '<p class="prompt">' + q.prompt + '</p>' +
+      '<div id="answerArea">' + answerAreaHTML + '</div>' +
+      '<div class="hint-row">' +
+      '<button class="ghost-btn" id="hintBtn">Get a clue (' + q.hints.length + ' left)</button>' +
+      '<div class="hint-box" id="hintBox" hidden></div>' +
+      '</div>' +
+      '<div id="feedback"></div>' +
+      '<div class="nav-row"></div>' +
+      '</section>';
+
+    var hintsRevealed = 0;
+    var hintBtn = document.getElementById('hintBtn');
+    var hintBox = document.getElementById('hintBox');
+    hintBtn.addEventListener('click', function () {
+      if (hintsRevealed >= q.hints.length) return;
+      hintBox.hidden = false;
+      var p = document.createElement('p');
+      p.textContent = '💡 ' + q.hints[hintsRevealed];
+      hintBox.appendChild(p);
+      hintsRevealed++;
+      state.hintsUsed[i] = hintsRevealed;
+      var left = q.hints.length - hintsRevealed;
+      hintBtn.textContent = left > 0 ? 'Get another clue (' + left + ' left)' : 'No more clues';
+      if (left <= 0) hintBtn.disabled = true;
+    });
+
+    function handleResult(isCorrect, chosenBtn) {
+      var fb = document.getElementById('feedback');
+      if (isCorrect) {
+        state.answered[i] = true;
+        state.stars[i] = computeStars(i);
+        fb.innerHTML =
+          '<div class="feedback correct">' +
+          '<div class="fb-title">Nice work — that\'s it!</div>' +
+          '<div class="fb-explain">' + q.explain + '</div>' +
+          '<div class="stars">' + starString(state.stars[i]) + '</div>' +
+          '</div>';
+        launchConfetti();
+        // lock inputs
+        if (q.type === 'number') {
+          document.getElementById('numInput').disabled = true;
+          document.getElementById('checkBtn').disabled = true;
+        } else {
+          Array.prototype.forEach.call(document.querySelectorAll('.choice-btn'), function (b) { b.disabled = true; });
+          if (chosenBtn) chosenBtn.classList.add('correct');
+        }
+        hintBtn.disabled = true;
+        renderTrail();
+        var navRow = document.querySelector('.nav-row');
+        var nextLabel = (i < 5) ? 'Next stop →' : 'See my Field Journal →';
+        navRow.innerHTML = '<button class="primary-btn" id="nextBtn">' + nextLabel + '</button>';
+        document.getElementById('nextBtn').addEventListener('click', function () {
+          var a = activeIndex();
+          if (a < 6) { state.view = a; renderStation(a); } else { renderSummary(); }
+        });
+      } else {
+        state.attempts[i]++;
+        var encourage = state.attempts[i] === 1
+          ? "Not quite — take another look."
+          : "Still not it. Try a clue if you'd like one!";
+        fb.innerHTML =
+          '<div class="feedback incorrect">' +
+          '<div class="fb-title">' + encourage + '</div>' +
+          '</div>';
+        if (chosenBtn) {
+          chosenBtn.classList.add('incorrect');
+          setTimeout(function () { chosenBtn.classList.remove('incorrect'); }, 900);
+        }
+      }
+    }
+
+    if (q.type === 'number') {
+      document.getElementById('checkBtn').addEventListener('click', function () {
+        var input = document.getElementById('numInput');
+        var val = input.value.trim();
+        if (val === '') return;
+        var isCorrect = Number(val) === Number(q.answer);
+        handleResult(isCorrect, null);
+      });
+      document.getElementById('numInput').addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') document.getElementById('checkBtn').click();
+      });
+    } else {
+      Array.prototype.forEach.call(document.querySelectorAll('.choice-btn'), function (btn) {
+        btn.addEventListener('click', function () {
+          var idx = Number(btn.getAttribute('data-idx'));
+          var isCorrect = q.choices[idx].value === q.answer;
+          handleResult(isCorrect, btn);
+        });
+      });
+    }
+  }
+
+  function renderSummary() {
+    var total = state.stars.reduce(function (a, b) { return a + b; }, 0);
+    var tier;
+    if (total >= 16) tier = "Master Pattern Explorer! You spotted every rule with real confidence.";
+    else if (total >= 11) tier = "Sharp-Eyed Explorer — you're getting very good at finding the rule.";
+    else tier = "Curious Explorer — every clue you used is a clue you now know to look for. Play again to shine brighter!";
+
+    var listHTML = STATIONS.map(function (s, i) {
+      return '<li><span>' + s.emoji + ' ' + s.title + '</span><span>' + starString(state.stars[i]) + '</span></li>';
+    }).join('');
+
+    mainEl.innerHTML =
+      '<section class="summary-card">' +
+      '<p class="kicker">Journal complete</p>' +
+      '<h2>Your Field Journal</h2>' +
+      '<ul class="summary-list">' + listHTML + '</ul>' +
+      '<div class="summary-total">' + total + ' / 18 stars</div>' +
+      '<p class="tier-msg">' + tier + '</p>' +
+      '<div class="nav-row"><button class="primary-btn" id="againBtn">Explore again</button></div>' +
+      '</section>';
+    document.getElementById('againBtn').addEventListener('click', initGame);
+  }
+
+  function launchConfetti() {
+    if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    var colors = ['#D9A22B', '#167A67', '#C23B56', '#3F6FB0'];
+    for (var k = 0; k < 18; k++) {
+      var piece = document.createElement('div');
+      piece.className = 'confetti-piece';
+      piece.style.left = (Math.random() * 100) + 'vw';
+      piece.style.background = colors[k % colors.length];
+      piece.style.animationDelay = (Math.random() * 150) + 'ms';
+      document.body.appendChild(piece);
+      (function (el) { setTimeout(function () { el.remove(); }, 1400); })(piece);
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', function () {
+    mainEl = document.getElementById('main');
+    trailEl = document.getElementById('trail');
+    document.getElementById('restartBtn').addEventListener('click', initGame);
+    initGame();
+  });
+})();
+</script>
+</body>
+</html>

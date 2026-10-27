@@ -1,0 +1,13 @@
+{
+  "name": "class-6-learning-portal",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Class VI learning portal: student, parent and teacher views with course tracking",
+  "scripts": {
+    "test": "node tests/api.test.mjs"
+  },
+  "dependencies": {
+    "@netlify/blobs": "^8.1.0"
+  }
+}
